@@ -1,0 +1,52 @@
+#!/bin/bash
+
+function is_authors_list () {
+    echo "$*" | tr '[]' '()' | grep -o "[()]" > /dev/null && return 1
+    echo "$*" | tr ',' '\n' | sed 's/\ +//g' | while read name; do
+	is_author_name "$name" || return 1
+    done
+    return 0
+}
+
+function is_author_name () {
+    test $(echo "$*" | \grep -o "\ [a-z]" | wc -l) -gt 3 && return 1 # Too many lower case letters as first word letter
+    return 0
+}
+
+# Extract the text if pdf input
+
+extension=$(echo "$*" | sed "s/.*\.//g")
+if [ "$extension" = "pdf" ]; then
+    file="$(mktemp  --suffix='.txt')"
+    pdftotext "$*" "$file" || exit 0
+else
+    file="$*"
+fi
+
+# Cool case when all references start with [number]
+cat "$file" |
+    perl -pe "s/\n/ /g" | # One line
+    perl -pe "s/\ +/ /g" | # Double spaces
+    grep -o "\[[0-9][^[]*" | # filter ^[number] (remplacer par [alphanum_sans_espaces*])
+    while read l; do
+	# Authors
+	authors="$(echo "$l" | perl -ape "s/^.*\] (.*?[a-z])\..*/\1/g")"
+	is_authors_list "$authors" || continue # Name quality check
+	remainder="$(echo "$l" | sed "s/^.*${authors}\.\ *//")"
+
+	echo "$remainder" | grep [0-9] >/dev/null || continue # There must be numbers somewhere
+	#test "$(echo "$remainder" | grep -o "\." | wc -l)" -le 2  || continue # At least 3 '.' in total
+
+	# Title
+	title="$(echo "$remainder" | perl -ape "s/\..*//g")"
+	#echo ${l}
+	echo "$title"
+	echo "    (by) $authors"
+    done
+
+#perl -pe "s/([a-zA-Z].*?)\[.*\]/\1/g"
+
+if [ ! "$extension" = "pdf" ]; then
+    rm "$file";
+fi
+
