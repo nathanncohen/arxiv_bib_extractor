@@ -45,7 +45,6 @@ fi
 
 	echo "$title"
 	echo "    (by) $authors"
-	echo "$l"
 	echo
     done
 
