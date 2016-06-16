@@ -31,5 +31,3 @@ function get_authors () {
     is_authors_list "$authors" && echo "$authors" && return 0
     return 1
 }
-
-get_authors "[8] Yu. V. Chekanov. Critical points of quasifunctions, and generating families of Legendrian manifolds. Funktsional. Anal. i Prilozhen., 30(2):56–69, 96, 1996."
