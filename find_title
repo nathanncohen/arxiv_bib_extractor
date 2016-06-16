@@ -1,0 +1,16 @@
+#!/bin/bash
+
+function get_title () {
+    title="$(echo "$*" |
+                   sed "s/[,\.]\ *Journal\ .*//g" |
+                   sed "s/[,\.]\ *Bulletin\ .*//g" |
+                   sed "s/[,\.]\ *[Vv]ol[\.\ ].*//g" |
+                   sed "s/[,\.]\ *[Tt]o [Aa]ppear\ .*//g" |
+                   perl -ape "s/[,\.]\ *arXiv:[0-9]+.*//g" |
+                   sed "s/[,\.]\ *In\ .*//g" |
+		   sed "s/[,\.]\ *[[:upper:]]+*[[:lower:]]*\..*//" |
+		   cat)"
+    test -z "$title" && return 1                                # Empty
+    echo "$title" | grep "^[[:lower:]]" > /dev/null && return 1 # Starts with lower case ?
+    echo "$title"
+}

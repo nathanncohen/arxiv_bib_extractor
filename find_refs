@@ -1,0 +1,52 @@
+#!/bin/bash
+
+export VERBOSE=1
+
+source find_authors
+source find_title
+
+# Extract the text if pdf input
+file="$*"
+if [ "${file:0:4}" == "http" ]; then
+    tmp="$(mktemp  --suffix='.pdf')"
+    wget -q --show-progress "$file" -O "$tmp" || exit 0
+    file="$tmp"
+fi
+
+# Extract the text if pdf input
+extension=$(echo "$file" | sed "s/.*\.//g")
+if [ "$extension" = "pdf" ]; then
+    tmp="$(mktemp  --suffix='.txt')"
+    pdftotext "$file" "$tmp" || exit 0
+    file="$tmp"
+fi
+
+# Cool case when all references start with [number]
+./find_bibentries "$file" | # filter ^[number] (remplacer par [alphanum_sans_espaces*])
+    while read l; do
+
+	# Authors
+	authors="$(get_authors "$l")"
+	if [ $? == 1 ]; then
+	    test $VERBOSE == 1 && echo "Failure (authors): $l" 1>&2
+	    continue
+	fi
+
+	remainder="$(echo "${l#*${authors}}" | sed "s/^[\., ]*//g")"
+
+	#echo "$remainder" | grep [0-9] >/dev/null || continue # There must be numbers somewhere
+
+	# Title
+	title="$(get_title "$remainder")"
+	if [ $? == 1 ]; then
+	    test $VERBOSE == 1 && echo "Failure (title): $remainder" 1>&2
+	    continue
+	fi
+
+	echo "$title"
+	echo "    (by) $authors"
+	echo "$l"
+	echo
+    done
+
+echo "(txt source) $file"

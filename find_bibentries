@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# Tricks to split biblio ? With [...] when lucky ?
+cat "$*" | tr '\n\f' ' ' | sed "s/[ \t]+/ /g" | grep -i -E -o "references[^a-z]*{,100}(\[[a-z]*[0-9]*\].*{10,400}){1,}" | tail -n 1 | perl -ape "s/(\[[a-zA-Z]*[0-9]*\])/\n\1/g" | tail -n+2
