@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export VERBOSE=1
+export VERBOSE=0
 
 source find_authors
 source find_title
@@ -22,7 +22,7 @@ if [ "$extension" = "pdf" ]; then
 fi
 
 # Cool case when all references start with [number]
-./find_bibentries "$file" | # filter ^[number] (remplacer par [alphanum_sans_espaces*])
+./find_bibentries "$file" | tee /tmp/whatever_tmp | # filter ^[number] (remplacer par [alphanum_sans_espaces*])
     while read l; do
 
 	# Authors
@@ -32,9 +32,7 @@ fi
 	    continue
 	fi
 
-	remainder="$(echo "${l#*${authors}}" | sed "s/^[\., ]*//g")"
-
-	#echo "$remainder" | grep [0-9] >/dev/null || continue # There must be numbers somewhere
+	remainder="$(echo "${l#*${authors}}" | sed "s/^[\.,: ]*//g")"
 
 	# Title
 	title="$(get_title "$remainder")"
@@ -48,4 +46,5 @@ fi
 	echo
     done
 
-echo "(txt source) $file"
+echo "(Uncaught refs) $((diff <(grep -o "\[[a-zA-Z]*[0-9]*\]" "$file" | sort -u) <(grep -o "\[[a-zA-Z]*[0-9]*\]" "/tmp/whatever_tmp" | sort -u)) | grep "^< " | tr -d '\n< ')" 1>&2
+echo "(txt source) $file" 1>&2
