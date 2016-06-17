@@ -4,14 +4,14 @@ echo "About to remove directories meta/. Control+C if you don't want to, and pre
 read
 rm -rf meta
 mkdir meta
-wget -q --show-progress "http://export.arxiv.org/api/query?search_query=all:math.co&start=0&max_results=10" -O "meta/first"
+wget -q --show-progress "http://export.arxiv.org/api/query?search_query=all:cs.DM&start=0&max_results=10" -O "meta/first"
 
 tot="$(grep "opensearch:totalResults" "meta/first" | perl -ape "s/^.*>([0-9]*)<.*/\1/g")"
 echo "$tot entries to download."
 step=1000
 for i in $(seq 0 $step $((tot-1))); do
     sleep 20s
-    while ! wget -q --show-progress "http://export.arxiv.org/api/query?search_query=all:math.co&start=0&max_results=10" -O "meta/$(printf "%010d\n" $i)"; do
+    while ! wget -q --show-progress "http://export.arxiv.org/api/query?search_query=all:cs.DM&start=$i&max_results=$step" -O "meta/$(printf "%010d\n" $i)"; do
 	sleep 20s
     done
 done

@@ -1,0 +1,10 @@
+#!/bin/bash
+echo "About to 'rm -rf bib'. Alright ?"
+read
+for f in txt/*; do
+    i="$(basename "$f")"
+    target="bib/${i%pdf}.txt"
+    if [ ! -f "$target" ]; then
+	echo ../find_bibentries "$f" \> "$target";
+    fi
+done | parallel

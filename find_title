@@ -9,7 +9,7 @@ function get_title () {
                    sed "s/[,\.]\ *[Tt]o [Aa]ppear\ .*//g" |
                    perl -ape "s/[,\.]\ *arXiv:[0-9]+.*//g" |
                    sed "s/[,\.]\ *In\ .*//g" |
-		   sed "s/[,\.]\ *[[:upper:]]+*[[:lower:]]*\..*//" |
+		   sed "s/[,\.]\ *[[:upper:]][[:lower:]]*\..*//" |
 		   cat)"
     title="$(echo "$title" | perl -ape "s/“(.*?)”.*$/\1/g")"
     test -z "$title" && return 1                                # Empty

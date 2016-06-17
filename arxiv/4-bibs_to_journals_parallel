@@ -1,0 +1,30 @@
+#!/bin/bash
+cat bibs | cut -d "]" -f "2-" |
+    sed "s/ arXiv:[^ ]*//g" |
+    perl -ape "s/http.*?[,\.a-z] //g" |
+    perl -ape "s/http[^ ]*$//g" |
+    sed "s/ MR //g" |
+    perl -ape "s/\[.*?\]//g" |
+    grep -E "^.{,400}$" |
+    tr -d "()0-9:–" |
+    sed "s/ no//g" |
+    sed "s/ pages//g" |
+    sed "s/ pp//g" |
+    sed "s/to appear//g" |
+    sed "s/in Russian//g" |
+    sed "s/in [Pp]reparation//g" |
+    sed "s/[Aa]vailable from//g" |
+    sed "s/[Ss]pringer//g" |
+    sed "s/[vV]erlag//g" |
+    sed "s/[Pp]reprint//g" |
+    sed "s/[aA]ccepted in//g" |
+    sed "s/[aA]ccepted by//g" |
+    sed "s/[aA]ccepted//g" |
+    sed "s/[S]ubmitted to//g" |
+    sed "s/[S]ubmitted//g" |
+    sed "s/,\ *[Ii]n[: ]/,/g" |
+    perl -ape "s/^.* [[:lower:]]*[,\.]//g" |
+    perl -ape "s/( |[[:punct:]])*$//g" |
+    perl -ape "s/^( |[[:punct:]])*//g" |
+    grep -E "^.{3,}$" |
+    cat

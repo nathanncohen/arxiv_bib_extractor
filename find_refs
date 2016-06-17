@@ -1,9 +1,12 @@
 #!/bin/bash
 
+# NOTE: Utiliser les noms d'éditeurs et les années pour splitter encore les entrees bibliographiques.
+
 export VERBOSE=0
 
 source find_authors
 source find_title
+source find_journal
 
 # Extract the text if pdf input
 file="$*"
@@ -34,16 +37,27 @@ fi
 
 	remainder="$(echo "${l#*${authors}}" | sed "s/^[\.,: ]*//g")"
 
-	# Title
-	title="$(get_title "$remainder")"
+	# # Title
+	# title="$(get_title "$remainder")"
+	# if [ $? == 1 ]; then
+	#     test $VERBOSE == 1 && echo "Failure (title): $remainder" 1>&2
+	#     continue
+	# fi
+
+	# Journal
+	journal="$(get_journal "$remainder")"
 	if [ $? == 1 ]; then
-	    test $VERBOSE == 1 && echo "Failure (title): $remainder" 1>&2
+	    test $VERBOSE == 1 && echo "Failure (journal): $remainder" 1>&2
 	    continue
 	fi
+	echo "$journal"
 
-	echo "$title"
-	echo "    (by) $authors"
-	echo
+	#echo "$title"
+	#echo "    (by) $authors"
+	#echo "    (in) $journal"
+	#echo "$l"
+	#echo
+
     done
 
 echo "(Uncaught refs) $((diff <(grep -o "\[[a-zA-Z]*[0-9]*\]" "$file" | sort -u) <(grep -o "\[[a-zA-Z]*[0-9]*\]" "/tmp/whatever_tmp" | sort -u)) | grep "^< " | tr -d '\n< ')" 1>&2
