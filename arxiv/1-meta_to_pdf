@@ -1,7 +1,7 @@
 #!/bin/bash
 
-cat meta/* | grep "link title=.pdf." | grep -o "http://[^\"]*" | sort -u | while read l; do
-    target="pdf/$(basename "$l").pdf"
+cat 1-meta/* | grep "link title=.pdf." | grep -o "http://[^\"]*" | sort -u | while read l; do
+    target="2-pdf/$(basename "$l").pdf"
     test -e "$target" && echo "(skipping) $l" && continue
     sleep 1s
     while ! wget -q --show-progress "$l" -O "$target"; do

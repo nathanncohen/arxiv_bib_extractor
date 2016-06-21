@@ -1,0 +1,43 @@
+#!/bin/bash
+
+function grep_short () {
+    while read l; do
+	test $(echo "$l" | wc -c) -le $1 && echo "$l"
+    done
+}
+cat "$*" | cut -d "]" -f "2-" |
+    sed "s/$/./g" | # Add a final '.'
+    sed "s/ arXiv:[^ ]*//g" | # USE THIS DATA
+    sed "s/doi: *[^ ]*//g" | # USE THIS DATA
+    perl -ape "s/[0-9]+[a-zA-Z]*:[0-9]+//g" | # USE THIS DATA ? Example: MR 98b:14018.
+    perl -ape "s/http.*?[,\.a-z] //g" |
+    perl -ape "s/http[^ ]*$//g" |
+    sed "s/ MR //g" |
+    perl -ape "s/\[.*?\]//g" | # Remove [<text>]
+    grep_short 400 |
+    tr -d "#()0-9:–" |
+    sed "s/ no.*//g" |
+    sed "s/ pages.*//g" |
+    sed "s/ pp.*//g" |
+    sed "s/, *Berlin *[,\.]/./g" | # Careful of journals containing the name 'berlin'
+    sed "s/, *New York *[,\.]/./g" | # Same with 'new york'
+    sed "s/[Ii]n [rR]ussian//g" |
+    sed "s/[Ii]n [Pp]reparation//g" |
+    sed "s/[Aa]vailable from//g" |
+    sed "s/[Aa]vailable as//g" |
+    sed "s/[Ss]pringer//g" |
+    sed "s/[vV]erlag//g" |
+    sed "s/[Pp]reprint//g" |
+    perl -ape "s/.*[Tt]o appear( in)*//g" |
+    perl -ape "s/.*[aA]ccepted( in)*( by)*//g" |
+    perl -ape "s/.*[S]ubmitted( to)*//g" |
+    perl -ape "s/.*,\ *[Ii]n[: ]+//g" |
+    perl -ape "s/^.* ([[:lower:]]+[,\.])//g" | # Tries to guess the last word of the title
+    perl -ape "s/([^\.])( |[[:punct:]])*$/\1/g" | # Remove trailing punctuation, but leave remaining '.' (cf. abbreviations)
+    perl -ape "s/^( |[[:punct:]])*//g" |
+
+    # Filter wrong output
+    grep -E "^.{3,}$" |
+    grep -v " \." |
+    grep_short 90 |
+    cat

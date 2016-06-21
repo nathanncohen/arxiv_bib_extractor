@@ -1,9 +1,9 @@
 #!/bin/bash
-echo "About to 'rm -rf bib'. Alright ?"
-read
-for f in txt/*; do
+rm -rf "4-bibs"
+mkdir -p "4-bibs"
+for f in 3-txt/*; do
     i="$(basename "$f")"
-    target="bib/${i%pdf}.txt"
+    target="4-bibs/${i%.txt}.bib"
     if [ ! -f "$target" ]; then
 	echo ../find_bibentries "$f" \> "$target";
     fi
