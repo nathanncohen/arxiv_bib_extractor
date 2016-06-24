@@ -1,0 +1,10 @@
+#!/bin/bash
+
+rm -f "6-unexplained_entries" tmp1 tmp2
+cat 4-bibs/* > tmp1
+cat 5-frequent_journals | while read l; do
+    grep -v -E "[0-9,\.;:”) ] *([Ii]n)*([Ss]ubmitted to)*([Tt]o [Aa]ppear( in)*)* *$l *[,0-9(;:]" tmp1 > tmp2
+    mv tmp2 tmp1
+    echo "Remaining unexplained: $(wc -l tmp1)"
+done
+mv tmp1 6-unexplained_entries

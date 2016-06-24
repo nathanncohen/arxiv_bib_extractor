@@ -1,5 +1,6 @@
 #!/bin/bash
 
+rm -rf "5-journals" "5-cat_journals" "5-sorted_journals" "5-frequent_journals"
 mkdir -p "5-journals"
 for f in 4-bibs/*; do
     i="$(basename "$f")"
@@ -11,6 +12,7 @@ done | parallel
 
 minoccur=50 # Y'a vraiment des conneries (e.g. 'and', 'Math') qui ont >50 occurrences
 
+echo "Building list of frequent (>$minoccur occurrences) journals"
 cat 5-journals/* |
     tee 5-cat_journals | # Store all journal entries
     sort | uniq -c | sort -r -n |
@@ -21,10 +23,3 @@ cat 5-journals/* |
 	fi
     done |
     cat > 5-frequent_journals
-
-f="unexplained_entries"
-cat 4-bibs/* > $f
-cat 5-frequent_journals | while read l; do
-    grep -v ", *$l" "$f" > "${f}2"
-    mv "${f}2" "${f}"
-done
