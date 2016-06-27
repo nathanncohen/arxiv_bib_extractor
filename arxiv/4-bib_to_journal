@@ -8,15 +8,16 @@ function grep_short () {
 cat "$*" | cut -d "]" -f "2-" |
     sed "s/$/./g" | # Add a final '.'
     sed "s/ arXiv:[^ ]*//g" | # USE THIS DATA
-    sed "s/doi: *[^ ]*//g" | # USE THIS DATA
-    perl -ape "s/[0-9]+[a-zA-Z]*:[0-9]+//g" | # USE THIS DATA ? Example: MR 98b:14018.
+    perl -ape "s/(arXiv:)* *[a-zA-Z]+\.[a-zA-Z]*\/[0-9]+/, /g" | # USE THIS DATA (arXiv:math.CO/0408204 or without arxiv prefix)
+    sed "s/[[Dd][Oo][Ii]: *[^ ]*/, /g" | # USE THIS DATA
+    perl -ape "s/[0-9]+[a-zA-Z]*:[0-9]+/, /g" | # USE THIS DATA ? Example: MR 98b:14018.
     perl -ape "s/http.*?[,\.a-z] //g" |
     perl -ape "s/http[^ ]*$//g" |
     sed "s/ MR //g" |
     perl -ape "s/\[.*?\]//g" | # Remove [<text>]
     grep_short 400 |
-    sed "s/\(/,(/g" |
-    sed "s/\)/),/g" |
+    sed "s/(/,(/g" |
+    sed "s/)/), /g" |
     tr -d "#()0-9:–" |
     sed "s/ no.*//g" |
     sed "s/ pages.*//g" |
@@ -33,13 +34,19 @@ cat "$*" | cut -d "]" -f "2-" |
     perl -ape "s/.*[Tt]o appear( in)*//g" |
     perl -ape "s/.*[aA]ccepted( in)*( by)*//g" |
     perl -ape "s/.*[S]ubmitted( to)*//g" |
-    perl -ape "s/.*,\ *[Ii]n[: ]+//g" |
+    perl -ape "s/.*[,\.]\ *[Ii]n[: ]+//g" |
     perl -ape "s/^.* ([[:lower:]]+[,\.])//g" | # Tries to guess the last word of the title
-    perl -ape "s/([^\.]\.{0,1})( |[[:punct:]])*$/\1/g" | # Remove trailing punctuation, but leave remaining '.' (cf. abbreviations)
-    perl -ape "s/^( |[[:punct:]])*//g" |
+    perl -ape "s/^.*?([[:upper:]])/\1/g" | # The journal's name start with an upper case letter
+
+    perl -ape "s/ +([[:punct:]])/\1/g" | # remove spaces before punctuation
+    perl -ape "s/,[[:punct:] ]+/, /g" | # Remove excessive punctuation (eg 'whatever, .. , ') carefully. Dont want to remove 'J.' nor (" ... end of title', Journal Of ...")
+    perl -ape "s/\.[[:punct:] ]+/. /g" | # Remove excessive punctuation (eg 'whatever, .. , ') carefully. Dont want to remove 'J.' nor (" ... end of title', Journal Of ...")
+    perl -ape "s/[ ,][[:punct:] ]*$/,/g" | # Remove excessive punctuation (eg 'whatever, .. , ') carefully. Dont want to remove 'J.' nor (" ... end of title', Journal Of ...")
+    perl -ape "s/^( |[[:punct:]])*//g" | # beginning excessive punctuation
 
     # Filter wrong output
     grep -E "^.{3,}$" |
     grep -v " \." |
+    grep -v "^[^a-zA-Z]*$" | # Entries with nothing that makes sense
     grep_short 90 |
     cat

@@ -1,4 +1,15 @@
 #!/bin/bash
 
-# Tricks to split biblio ? With [...] when lucky ?
-cat "$*" | tr '\n\f' ' ' | sed "s/[ \t]+/ /g" | grep -i -E -o "references[^a-z]*{,100}(\[[a-z]*[0-9]*\].*{10,400}){1,}" | tail -n 1 | perl -ape "s/(\[[a-zA-Z]*[0-9]*\])/\n\1/g" | tail -n+2
+# # Tricks to split biblio ? With [...] when lucky ?
+# cat "$*" | tr '\n\f' ' ' | sed "s/[ \t]+/ /g" | grep -i -E -o "references[^a-z]*{,100}(\[[a-z]*[0-9]*\].*{10,400}){1,}" | tail -n 1 | perl -ape "s/(\[[a-zA-Z]*[0-9]*\])/\n\1/g" | tail -n+2
+
+
+
+# Considers that bib entries start when a *newline* starts with: [Sam45], 15. or [15]
+#
+# Returns them one per line, all starting with '['
+cat "$*" | tr -d '\f\t' | perl -ape "s/^\ *([0-9]+)\./[\1]/g" | tr '\n' '\t' |
+    grep -P "\t\[[A-Z]*[a-z]*[0-9]*\] [^\[]{10,400}[^\t\[]" -o |
+    tr '\t' ' ' | cut -c 2- | # strip initial space
+    sort -u
+
