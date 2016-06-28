@@ -9,7 +9,7 @@
 #
 # Returns them one per line, all starting with '['
 cat "$*" | tr -d '\f\t' | perl -ape "s/^\ *([0-9]+)\./[\1]/g" | tr '\n' '\t' |
-    grep -P "\t\[[A-Z]*[a-z]*[0-9]*\] [^\[]{10,400}[^\t\[]" -o |
+    grep -P "\t\[[A-Z]*[a-z]*[0-9]*\][^\[]{10,400}[^\t\[]" -o |
     tr '\t' ' ' | cut -c 2- | # strip initial space
     sort -u
 

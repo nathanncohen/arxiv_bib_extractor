@@ -1,0 +1,6 @@
+#!/bin/bash
+#
+# Outputs things that really look like a journal's name, whenever found in easy-to-parse bibliographical entries
+cat 4-bibs/* |
+    grep -P "^\[[^[]*\] ((and|[[:upper:]][[:lower:]]*)[,\. ]+)*[^,]* [[:lower:]]*,[A-Za-z\. ]*,[ 0-9:()\-]*[:\-–][ 0-9:()\-]*\.$" |
+    perl -ape "s/^.*, ([A-Za-z\. ]*),[ 0-9:()\-–]*\.$/\1/g"

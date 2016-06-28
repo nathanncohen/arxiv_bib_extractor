@@ -1,0 +1,37 @@
+#!/bin/bash
+echo "*** Journal Classification helper ***"
+echo ""
+echo "You are proposed 'journal-looking' strings. Classify them"
+echo ""
+echo "(output is stored in 'journals_yes' and 'journals_no')"
+echo ""
+echo "Ready ?"
+read
+
+cat journals_yes journals_no | sed "s/$/,/" > /tmp/arewlhaglruhgalrhgaleurhg || exit 0
+
+cat potential | sed "s/^[ 0-9]*//g" | sed "s/$/,/" | grep -v --line-regexp -F -f /tmp/arewlhaglruhgalrhgaleurhg | while read l; do
+    clear
+    #l="$(echo "$l" | cut -d " " -f 2-)"
+    echo "Is this a journal ?"
+    echo ""
+    echo "        \"$l\""
+    echo ""
+    echo "--------------------------------"
+    echo ""
+
+    if ! grep -v -F -f journals_yes 4-bibs/* | grep -w -F "$l" | head -n 20 | grep -w -F "$l" --color; then
+	continue
+    fi
+    echo ""
+    echo "Hit '1' for yes, hit '0' for no. Usure? Hit anything else."
+    read -u 2 -n 1 c
+    if [ "$c" == "1" ]; then
+	echo "${l%,}" >> journals_yes
+    elif [ "$c" == "0" ]; then
+	echo "${l%,}" >> journals_no
+    else
+	echo "Got '$c'. Unclassified"
+	read -u 2 tmp
+    fi
+done
