@@ -1,0 +1,15 @@
+#!/bin/bash
+#
+# This script goes through all possible missing bibtex entries (by inspecting
+# all .html files in the directory) and downloads them. It is the mathematical
+# "closure" of a partial set of bibtex files from a journal.
+
+while [ 1 ]; do
+    before="$(find . | wc -l)"
+    ./find_new_block
+    ./find_new_entry
+    after="$(find . | wc -l)"
+    if [ $before -eq $after ]; then
+	break
+    fi
+done

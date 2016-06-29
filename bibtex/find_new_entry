@@ -1,0 +1,15 @@
+#!/bin/bash
+#
+# This script goes through all html files and check whether all issues have been
+# turned into a bibtex file. Otherwise, downloads *one* of the missing ones.
+
+find $* -iname "*.html" -exec strings {} \; | tr -d '\n' |
+    grep -o -P "<A HREF=\"/science/journal/[0-9].*?\".*?>" |
+    grep -v "xpanded" |
+    perl -ape "s/^.*science.journal.(.*?)\".*$/\1/g" |
+    while read l; do
+	if [ ! -f "$l" ]; then
+	    ./dl_sciencedirect_bibentry "$l";
+	    break
+	fi
+    done

@@ -1,0 +1,19 @@
+#!/bin/bash
+#
+# Sciencedirect pages are organised by "blocks": note that only one entry is 'expanded' in the left menu:
+#
+#     https://www.sciencedirect.com/science/journal/01956698/48
+#
+# This script tests whether all blocks have been expanded at least once. It
+# download *one* missing page otherwise.
+
+find $* -iname "*html" -exec strings {} \; | tr -d '\n' |
+    grep -o -P "<A HREF=\"/science/journal/[^\"]*\"[^>]*xpanded[^>]*>" |
+    perl -ape "s/^.*science.journal.(.*?)\".*$/\1/g" |
+    sort -u |
+    while read l; do
+	if [ ! -f "$l.html" ]; then
+	    ./wget "http://www.sciencedirect.com/science/journal/$l" -O "$l.html";
+	    break
+	fi
+    done
