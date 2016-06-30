@@ -2,5 +2,5 @@
 
 sleep 20s;
 while ! torsocks wget $*; do
-    sleep 20s;
+    sleep 5m;
 done

@@ -16,6 +16,6 @@ mkdir -p "$(dirname "$f")"
 data="$((./wget "http://www.sciencedirect.com/science/journal/$*" -O "$f.html" && strings "$f.html") | tr -d '\n' | grep -E -o "Tag. action=..science..*?value=.Export." | grep -E "<input[^>]*>" -o)"
 
 for kw in _ob _method _hubEid _auth _version refSource _pubType PDF_DDM_MAX _cid chunk view go nextVector prevVector chunkSize hitCount count pdfDownload hubEID zone citation-type format export count md5; do
-    echo $kw="$((echo "name='citation-type' value='BIBTEX'" ; echo "name='format' value='cite-abs'";echo "$data") | grep -E "name=.$kw[\'\"]." | perl -ape "s/.*value=.([^\'\"]*).*$/\1/g" | head -n 1)&"
+    echo $kw="$((echo "name='citation-type' value='BIBTEX'"; echo "name='format' value='cite-abs'"; echo "name='_ob' value='DownloadURL'"; echo "name='_method' value='finish'";echo "$data") | grep -E "name=.$kw[\'\"]." | perl -ape "s/.*value=.([^\'\"]*).*$/\1/g" | head -n 1)&"
 done | tr -d '\n' | rev | cut -c 2- | rev |
     (read a; ./wget "http://www.sciencedirect.com/science?$a" -O "$f")
