@@ -1,6 +1,6 @@
 #!/bin/bash
 
 sleep 20s;
-while ! torsocks wget $*; do
+while ! torsocks wget -nv --show-progress $*; do
     sleep 5m;
 done
