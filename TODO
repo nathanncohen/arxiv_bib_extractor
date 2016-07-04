@@ -1,3 +1,6 @@
 - Aspirer la biblio bibtex de HAL. Y'a plein de données sur des journaux qu'on
   aura pas autrement, et y'a des journaux (genre DMTCS) qui sont basés dessus
   (donc on chopera absolument tout).
+
+- Use data from there:
+  http://liinwww.ira.uka.de/bibliography/
