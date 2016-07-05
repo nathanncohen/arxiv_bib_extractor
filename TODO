@@ -4,3 +4,12 @@
 
 - Use data from there:
   http://liinwww.ira.uka.de/bibliography/
+
+- Isn't that exactly what should be done?
+  https://core.ac.uk/
+
+- Nice question:
+  http://academia.stackexchange.com/questions/59093/bulk-download-of-arxiv-or-other-publication-data-set-with-metadata-and-citatio
+
+- Command to wget all arxiv data:
+  ./s3cmd-1.6.1/s3cmd get --recursive --skip-existing s3://arxiv/src/ --requester-pays

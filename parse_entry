@@ -37,7 +37,9 @@ function get_tag () {
 }
 
 function replace () {
-    cat | awk "{gsub(\"$1\", \"$2\", \$0); print}"
+    while read a; do
+	echo "${a/$1/$2}"
+    done
 }
 
 # Specific function to guess the journal's name. We must try harder, for journal
@@ -54,7 +56,7 @@ function parse_journal_from_db() {
     if echo "$*" | grep -P " [[:lower:]]+\." > /dev/null; then
 	j="$(auto_annotate_from_db "$(echo "$*" | perl -ape "s/( [[:lower:]]+)\./\1, /g")" | get_tag journal)"
 	if [ -n "$j" ]; then
-	    echo "$*" | sed "s/$j/, ╠journal=$j╣, /g"
+	    echo "$*" | replace "$j" ", ╠journal=$j╣, "
 	    return 0
 	fi
     fi
@@ -62,7 +64,7 @@ function parse_journal_from_db() {
     # Try to see if some journal fits, and check (badly) that only one fits (the test is too restrictive but correct)
     j="$(echo "$*" | grep -o -F -f tags/journal)"
     if [ -n "$j" ] && [ $(grep -F "$j" tags/journal | wc -l) -eq 1 ]; then
-    	echo "$*" | sed "s/$j/, ╠journal=$j╣, /g"
+    	echo "$*" | replace "$j" ", ╠journal=$j╣, "
     	return 0
     fi
 
@@ -71,7 +73,7 @@ function parse_journal_from_db() {
     if [ -z "$j" ]; then
 	echo "$*"
     else
-	echo "$*" | perl -ape "s/$j/, ╠journal=$j╣,/g"
+	echo "$*" | replace "$j" ", ╠journal=$j╣, "
     fi
 }
 
@@ -81,13 +83,13 @@ function guess_authors () {
     # Starts with Initials.
     # Meant to match the following pattern: I. K. Whatever, K.L. Whateverrr[.,] and O. Thing and J. van der Stuff[.,]
     if [ "${b:1:1}" = "." ]; then
-	aut="$(echo $b | \grep -P -o "^((([[:upper:]]\.[ ,]*)+([a-z]{1,4} )*)[^ ]+( and|[[:punct:]]) *)*")"
+	aut="$(echo $b | \grep -P -o "^((([[:upper:]]\.,*)+ ([a-z]{1,4} )*)[^ ]+( and|[[:punct:]]) *)*")"
 	echo "$*" | replace "$aut" "╠authors=$aut╣, "
 	return 0
     fi
 
     # Same in the other order, i.e. Whatever I. K., Whateverrrrr K. L.,
-    aut="$(echo $b | \grep -P -o "^(([a-z]{1,4} )*[^ ]+[[:punct:]]* +([[:upper:]][[:punct:]]+)+( and|[[:punct:]])+ *)*")"
+    aut="$(echo $b | \grep -P -o "^((\w{1,4} )*[^ ]+[[:punct:]]* +([[:upper:]][[:punct:]]+ *)+( and|[[:punct:]])+ *)*")"
     if [ -n "$aut" ]; then
 	echo "$*" | replace "$aut" "╠authors=$aut╣, "
 	return 0
