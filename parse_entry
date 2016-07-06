@@ -68,13 +68,14 @@ function parse_journal_from_db() {
     	return 0
     fi
 
-    j="$(echo "$*," | tr '0-9()' ',' | sed 's/ *, */, /g' | grep -F -f /tmp/journals_patterns -o | sed "s/^[ ,\.]*//" | sed "s/,$//")"
-    test $? -eq 0 || exit 1
-    if [ -z "$j" ]; then
-	echo "$*"
-    else
-	echo "$*" | replace "$j" ", ╠journal=$j╣, "
-    fi
+    # j="$(echo "$*," | tr '0-9()' ',' | sed 's/ *, */, /g' | grep -F -f /tmp/journals_patterns -o | sed "s/^[ ,\.]*//" | sed "s/,$//")"
+    # test $? -eq 0 || exit 1
+    # if [ -z "$j" ]; then
+    # 	echo "$*"
+    # else
+    # 	echo "$*" | replace "$j" ", ╠journal=$j╣, "
+    # fi
+    echo "$*"
 }
 
 function guess_authors () {
