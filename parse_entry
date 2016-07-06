@@ -95,8 +95,15 @@ function guess_authors () {
 	echo "$*" | replace "$aut" "╠authors=$aut╣, "
 	return 0
     fi
+
+    # Victor P. Whatever, Nicolas E. G. H. H. Thingy, and Whatever Whathehell,
+    aut="$(echo "$b" | grep -P -o "^([[:upper:]][^ ,\.:;]+ ([[:upper:]]\. +)*[[:upper:]][^ ,\.:;]+([,\.:;]* and|[,\.:;]) +)+")"
+    if [ -n "$aut" ]; then
+	echo "$*" | replace "$aut" "╠authors=$aut╣, "
+	return 0
+    fi
+
     echo "$*"
-    #aut2="$(echo $b | perl -ape "s/([[:upper:]]\. *)*//g")"
 }
 
 cat |
