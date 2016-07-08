@@ -116,12 +116,13 @@ function longest_line () {
 }
 function guess_title () {
     b="$(echo "$*" | sed "s/^.*authors=[^╣]*╣[,\. ]*//" | sed "s/╠.*//g" | grep -P -o "[“ ]*[[:upper:]][^,\.”]*([,\. ]+[[:lower:]][^,\.]*)*" | perl -ape "s/^( |[[:punct]]|“)*//g" | grep -P " [[:lower:]]" | longest_line)"
-    echo "$*" | replace "$b" "╠title=$b╣, "
+    echo "$*" | replace "$b" ", ╠title=$b╣, "
 }
 
 cat |
     sed "s/ˇ+ *//g" |
     sed "s/[´¨¨]+ *//g" | # Bad accents
+    sed "s| *// *|, |g" |
     perl -ape "s/ (Pages|pages|p\.*p\.*|pp|p\.|p|pp\.)* *([0-9]+)[-–]+([0-9]+)/,\. ╠pages=\2–\3╣,/g" |
     perl -ape "s/ ([0-9]+)\(([0-9]+)\):([0-9]+)[–-]+([0-9]+)/, ╠vol=\1╣, ╠issue=\2╣, ╠pages=\3–\4╣, /" | # 52(12):1491–1552
     perl -ape "s/ ([0-9]+):([0-9]+)[–-]+([0-9]+)/, ╠vol=\1╣, ╠pages=\2–\3╣, /" |  # 3:131–150
@@ -135,6 +136,8 @@ cat |
     perl -ape "s/ [Ii]n [Pp]ress([^a-z])/, ╠in_press╣, \1/g" |
     perl -ape "s/ [Ii]n [Pp]reparation([^a-z])/, ╠preprint╣, \1/g" |
     perl -ape "s/[[:punct:]] *[Ee]xtended [Aa]bstract[[:punct:]]/,/g" |
+    perl -ape "s/[,\.] *[Aa]ccepted *[,\.]/, ╠accepted╣, /g" |
+    perl -ape "s/[,\.] *[Ss]ubmitted *[,\.]/, ╠submitted╣, /g" |
 
     # Inserts , around numbers !!! Can wreck the title.
     perl -ape 's/ ([0-9])/, \1/g' |
