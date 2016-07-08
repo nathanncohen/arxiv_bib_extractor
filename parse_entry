@@ -24,7 +24,7 @@ function auto_annotate_from_db() {
     if [ -n "$tags" ]; then
 	while read tag content; do
 	    tag="$(basename "$tag")"
-            l="$(echo ${l}, | perl -ape "s/([,\(;] *)$content,/\1╠$tag=$content╣,/g")"
+            l="$(echo ${l}, | perl -ape "s/([,\(;] *)$content,/\1 ╠$tag=$content╣,/g")"
 	done < <(echo "$tags")
     fi
     echo $l
