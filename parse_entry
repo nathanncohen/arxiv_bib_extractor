@@ -14,8 +14,8 @@
 # (it must work for *all* kinds of keywords at once)
 function auto_annotate_from_db() {
     #echo "$l" >&2
-    l="$(echo "$*" | sed "s/ *, */, /g")"
-    tags="$(echo "$l" | tr '0-9()' ', ' | grep -o -P "(\w[\w-]*\.* )*\w[\w-]*\.{0,1}" | # (Words can contain a '-', i.e. Addison-Wesley)
+    l="$(echo "$*" | sed "s/ *,[,\. ]*/, /g")"
+    tags="$(echo "$l" | tr '0-9();:' ', ' | grep -o -P "(\w[\w-]*\.* )*\w[\w-]*\.{0,1}" | # (Words can contain a '-', i.e. Addison-Wesley)
 	while read l; do
 	    grep -o -x -F "$l" tags/*
 	done | sed "s/:/ /")"
@@ -24,10 +24,10 @@ function auto_annotate_from_db() {
     if [ -n "$tags" ]; then
 	while read tag content; do
 	    tag="$(basename "$tag")"
-            l="$(echo ${l}, | perl -ape "s/([,\(;] *)$content,/\1 ╠$tag=$content╣,/g")"
+            l="$(echo ${l}, | perl -ape "s/([,\(;\):] *)$content,/\1 ╠$tag=$content╣,/g")"
 	done < <(echo "$tags")
     fi
-    echo $l
+    echo "$l" | perl -ape "s/,[,\. ]*/, /g"
 }
 
 function get_tag () {
@@ -147,5 +147,6 @@ cat |
     while read ll; do parse_journal_from_db "$ll"; done |
     while read ll; do guess_authors "$ll"; done |
     while read ll; do guess_title "$ll"; done |
+
     perl -ape "s/(╠journal=[^╣]*╣)[, ]*([0-9]+)[ ,\.]/\1, ╠vol=\2╣, /g" | # The number that comes after the journal's name is the volume (?)
     cat
