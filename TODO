@@ -13,3 +13,5 @@
 
 - Command to wget all arxiv data:
   ./s3cmd-1.6.1/s3cmd get --recursive --skip-existing s3://arxiv/src/ --requester-pays
+
+- HAL database contains the DOI of many bibtex
