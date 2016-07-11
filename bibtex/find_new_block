@@ -15,6 +15,5 @@ find $* -iname "*html" -exec strings {} \; | tr -d '\n' |
 	if [ ! -f "$l.html" ]; then
 	    echo "New block: $l"
 	    ./wget "http://www.sciencedirect.com/science/journal/$l" -O "$l.html";
-	    break
 	fi
     done

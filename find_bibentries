@@ -11,8 +11,10 @@
 cat "$*" |
     tr -d '\f\t' |
     perl -ape "s/^\ *([0-9]+)\./[\1]/g" |
-    tr '\n' '\t' | perl -ape "s/\t[\t ]*([^\[])/ \1/g" |
-    grep -P "\t\[[A-Za-z]*[0-9]*\][^\[]{10,400}[^\t\[]" -o |
+    tr '\n' '\t' |
+    perl -ape "s/\t[\t ]*([^\[])/ \1/g" |
+    sed "s/^.*reference//I" |
+    grep -P "\t\[[A-Za-z]*[0-9]*\] *[[:upper:]][^\[]{10,400}[^\t\[]" -o |
     tr -d '\t' |
     sort -u
 
