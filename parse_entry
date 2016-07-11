@@ -61,7 +61,7 @@ function parse_journal_from_db() {
 	fi
     fi
 
-    # Try to see if some journal fits, and check (badly) that only one fits (the test is too restrictive but correct)
+    # Try to see if some journal fits, and check (badly) that only one fits (the test is too restrictive but correct) -- ARRANGE !!!!!!!!!!!!
     j="$(echo "$*" | grep -o -F -f tags/journal)"
     if [ -n "$j" ] && [ $(grep -F "$j" tags/journal | wc -l) -eq 1 ]; then
     	echo "$*" | replace "$j" ", ╠journal=$j╣, "
@@ -122,7 +122,7 @@ function guess_title () {
 cat |
     sed "s/ˇ+ *//g" |
     sed "s/[´¨¨]+ *//g" | # Bad accents
-    sed "s| *// *|, |g" |
+    sed "s| +// +|, |g" |
     perl -ape "s/ (Pages|pages|p\.*p\.*|pp|p\.|p|pp\.)* *([0-9]+)[-–]+([0-9]+)/,\. ╠pages=\2–\3╣,/g" |
     perl -ape "s/ ([0-9]+)\(([0-9]+)\):([0-9]+)[–-]+([0-9]+)/, ╠vol=\1╣, ╠issue=\2╣, ╠pages=\3–\4╣, /" | # 52(12):1491–1552
     perl -ape "s/ ([0-9]+):([0-9]+)[–-]+([0-9]+)/, ╠vol=\1╣, ╠pages=\2–\3╣, /" |  # 3:131–150
