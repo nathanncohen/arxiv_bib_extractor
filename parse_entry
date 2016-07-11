@@ -120,9 +120,8 @@ function guess_title () {
 }
 
 cat |
-    sed "s/ˇ+ *//g" |
-    sed "s/[´¨¨]+ *//g" | # Bad accents
-    sed "s| +// +|, |g" |
+    sed "s/[\`ˇ´´¨¨˝] *\([[:lower:]]\)/\1/g" | # Bad accents
+    perl -ape "s| +// +|, |g" |
     perl -ape "s/ (Pages|pages|p\.*p\.*|pp|p\.|p|pp\.)* *([0-9]+)[-–]+([0-9]+)/,\. ╠pages=\2–\3╣,/g" |
     perl -ape "s/ ([0-9]+)\(([0-9]+)\):([0-9]+)[–-]+([0-9]+)/, ╠vol=\1╣, ╠issue=\2╣, ╠pages=\3–\4╣, /" | # 52(12):1491–1552
     perl -ape "s/ ([0-9]+):([0-9]+)[–-]+([0-9]+)/, ╠vol=\1╣, ╠pages=\2–\3╣, /" |  # 3:131–150
