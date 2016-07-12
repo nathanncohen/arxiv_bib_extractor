@@ -154,9 +154,8 @@ cat |
     perl -ape "s/[[:punct:]] *[Ee]xtended [Aa]bstract[[:punct:]]/,/g" |
     perl -ape "s/[,\.] *[Aa]ccepted *[,\.]/, ╠accepted╣, /g" |
     perl -ape "s/[,\.] *[Ss]ubmitted *[,\.]/, ╠submitted╣, /g" |
-    perl -ape "s/[,\.] *(\w+ *edition) *[,\.]/, ╠edition_info=\1╣, /Ig" |
-
-    perl -ape "s/[,\.] *([0-9]*[[:lower:]]* ed\.) *[\,\,]/, ╠edition_info=\1╣, /Ig" |
+    sed "s/[,\.] *\(\w+ *edition\) *[,\.]/, ╠edition_info=\1╣, /Ig" |
+    sed "s/[,\.] *\([0-9]*[[:lower:]]* ed\.\) *[\,\,]/, ╠edition_info=\1╣, /Ig" |
 
     # Inserts , around numbers !!! Can wreck the title.
     perl -ape "s/”/”, /g" |
