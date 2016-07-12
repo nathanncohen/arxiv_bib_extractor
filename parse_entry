@@ -24,7 +24,10 @@ function auto_annotate_from_db() {
     if [ -n "$tags" ]; then
 	while read tag content; do
 	    tag="$(basename "$tag")"
-            l="$(echo ${l}, | perl -ape "s/([,\(;\):] *)$content,/\1 ╠$tag=$content╣,/g")"
+	    if [ "$tag" = "journal" ] && [ $(grep -F "$content" "tags/$tag" | grep "," | wc -l) -ge 2 ]; then
+		continue
+	    fi
+            l="$(echo ${l}, | perl -ape "s/([,\(;\):0-9] *)$content *([\(\),\.0-9])/\1 ╠$tag=$content╣, \2/g")"
 	done < <(echo "$tags")
     fi
     echo "$l" | perl -ape "s/,[,\. ]*/, /g"
@@ -54,7 +57,7 @@ function parse_journal_from_db() {
 
     # Try to remove the first suspicious '.' (end of the title) and see if it works.
     if echo "$*" | grep -P " [[:lower:]]+\." > /dev/null; then
-	j="$(auto_annotate_from_db "$(echo "$*" | perl -ape "s/( [[:lower:]]+)\./\1, /g")" | get_tag journal)"
+	j="$(auto_annotate_from_db "$(echo "$*" | perl -ape "s/( [0-9[[:lower:]]]+)\./\1, /g")" | get_tag journal)"
 	if [ -n "$j" ]; then
 	    echo "$*" | replace "$j" ", ╠journal=$j╣, "
 	    return 0
@@ -84,7 +87,7 @@ function guess_authors () {
     # Starts with Initials.
     # Meant to match the following pattern: I. K. Whatever, K.L. Whateverrr[.,] and O. Thing and J. van der Stuff[.,]
     if [ "${b:1:1}" = "." ]; then
-	aut="$(echo $b | \grep -P -o "^(((([[:upper:]]\. *)+,*)+ ([a-z]{1,4} )*)[^ ]+( and|[[:punct:]]) *)*")"
+	aut="$(echo $b | \grep -P -o "^(((([[:upper:]]\.[- ]*)+,*)+ ([a-z]{1,4} )*)[^ ]+( and|[[:punct:]]) *)*")"
 	echo "$*" | replace "$aut" "╠authors=$aut╣, "
 	return 0
     fi
@@ -120,9 +123,10 @@ function guess_title () {
 }
 
 cat |
-    sed "s/[\`ˇ´´¨¨˝] *\([[:lower:]]\)/\1/g" | # Bad accents
+    sed "s/$/,/" |
+    sed "s/[\`ˆˇ´´¨¨˝] *\([[:lower:]]\)/\1/g" | # Bad accents
     perl -ape "s| +// +|, |g" |
-    perl -ape "s/ (Pages|pages|p\.*p\.*|pp|p\.|p|pp\.)* *([0-9]+)[-–]+([0-9]+)/,\. ╠pages=\2–\3╣,/g" |
+    perl -ape "s/ (Pages|pages|p\.*p\.*|pp|p\.|p|pp\.)* *([0-9]+) *[-–]+ *([0-9]+)/,\. ╠pages=\2–\3╣,/g" |
     perl -ape "s/ ([0-9]+)\(([0-9]+)\):([0-9]+)[–-]+([0-9]+)/, ╠vol=\1╣, ╠issue=\2╣, ╠pages=\3–\4╣, /" | # 52(12):1491–1552
     perl -ape "s/ ([0-9]+):([0-9]+)[–-]+([0-9]+)/, ╠vol=\1╣, ╠pages=\2–\3╣, /" |  # 3:131–150
     perl -ape "s/ [Vv]ol[\. ]*([0-9]+)/,\. ╠vol=\1╣, /g" |
@@ -139,13 +143,15 @@ cat |
     perl -ape "s/[,\.] *[Ss]ubmitted *[,\.]/, ╠submitted╣, /g" |
 
     # Inserts , around numbers !!! Can wreck the title.
-    perl -ape 's/ ([0-9])/, \1/g' |
     perl -ape "s/”/”, /g" |
     perl -ape "s/“/, “/g" |
-    while read l; do auto_annotate_from_db "$l"; done |
     while read ll; do parse_journal_from_db "$ll"; done |
+    while read l; do auto_annotate_from_db "$l"; done |
     while read ll; do guess_authors "$ll"; done |
     while read ll; do guess_title "$ll"; done |
 
+
     perl -ape "s/(╠journal=[^╣]*╣)[, ]*([0-9]+)[ ,\.]/\1, ╠vol=\2╣, /g" | # The number that comes after the journal's name is the volume (?)
+    perl -ape "s/(╠journal=[^╣]*╣)[, ]*([0-9]+)\(([0-9]+)\)[ ,\.]/\1, ╠vol=\2╣, ╠issue=\3╣, /g" | # The number that comes after the journal's name is the volume (?)
+    perl -ape "s/,[ \.,]*/, /g" |
     cat

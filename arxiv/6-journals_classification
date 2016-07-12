@@ -20,7 +20,7 @@ cat potential | sed "s/^[ 0-9]*//g" | sed "s/$/,/" | grep -v --line-regexp -F -f
     echo "--------------------------------"
     echo ""
 
-    if ! grep -v -F -f journals_yes 4-bibs/* | grep -w -F "$l" | head -n 20 | grep -w -F "$l" --color; then
+    if ! grep -v -x -F -f journals_yes 4-bibs/* | grep -w -F "$l" | head -n 20 | grep -w -F "$l" --color; then
 	continue
     fi
     echo ""

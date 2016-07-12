@@ -4,7 +4,7 @@
 # turned into a bibtex file. Otherwise, downloads the missing ones.
 
 find $* -iname "*.html" -exec strings {} \; | tr -d '\n' |
-    grep -o -P "<A HREF=\"/science/journal/[0-9].*?\".*?>" |
+    grep -o -P "<A HREF=\"/science/journal/[0-9][^\"]*\"[^>]*>" |
     grep -v "xpanded" |
     perl -ape "s/^.*science.journal.(.*?)\".*$/\1/g" |
     grep "/" | # ugly hack
