@@ -25,40 +25,7 @@ if [ "$extension" = "pdf" ]; then
 fi
 
 # Cool case when all references start with [number]
-./find_bibentries "$file" | tee /tmp/whatever_tmp | # filter ^[number] (remplacer par [alphanum_sans_espaces*])
-    while read l; do
-
-	# Authors
-	authors="$(get_authors "$l")"
-	if [ $? == 1 ]; then
-	    test $VERBOSE == 1 && echo "Failure (authors): $l" 1>&2
-	    continue
-	fi
-
-	remainder="$(echo "${l#*${authors}}" | sed "s/^[\.,: ]*//g")"
-
-	# # Title
-	# title="$(get_title "$remainder")"
-	# if [ $? == 1 ]; then
-	#     test $VERBOSE == 1 && echo "Failure (title): $remainder" 1>&2
-	#     continue
-	# fi
-
-	# Journal
-	journal="$(get_journal "$remainder")"
-	if [ $? == 1 ]; then
-	    test $VERBOSE == 1 && echo "Failure (journal): $remainder" 1>&2
-	    continue
-	fi
-	echo "$journal"
-
-	#echo "$title"
-	#echo "    (by) $authors"
-	#echo "    (in) $journal"
-	#echo "$l"
-	#echo
-
-    done
+./find_bibentries "$file" | ./parse_entry
 
 echo "(Uncaught refs) $((diff <(grep -o "\[[a-zA-Z]*[0-9]*\]" "$file" | sort -u) <(grep -o "\[[a-zA-Z]*[0-9]*\]" "/tmp/whatever_tmp" | sort -u)) | grep "^< " | tr -d '\n< ')" 1>&2
 echo "(txt source) $file" 1>&2
