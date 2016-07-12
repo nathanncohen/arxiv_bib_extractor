@@ -17,7 +17,7 @@ function auto_annotate_from_db() {
     l="$(echo "$*" | sed "s/ *,[,\. ]*/, /g")"
     tags="$(echo "$l" | tr '0-9();:' ', ' | grep -o -P "(\w[\w-]*\.* )*\w[\w-]*\.{0,1}" | # (Words can contain a '-', i.e. Addison-Wesley)
 	while read l; do
-	    grep -o -x -F "$l" tags/*
+	    grep -o -x -F "$l" tags/* | grep -E '.'
 	done | sed "s/:/ /")"
 
     #echo "$l" | tr '0-9()' ', ' | grep -o -P "([\w\-]+\.* )*[\w-]+\.{0,1}" >&2
