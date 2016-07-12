@@ -65,10 +65,23 @@ function parse_journal_from_db() {
     fi
 
     # Try to see if some journal fits, and check (badly) that only one fits (the test is too restrictive but correct) -- ARRANGE !!!!!!!!!!!!
-    j="$(echo "$*" | grep -o -F -f tags/journal)"
-    if [ -n "$j" ] && [ $(grep -F "$j" tags/journal | wc -l) -eq 1 ]; then
-    	echo "$*" | replace "$j" ", ╠journal=$j╣, "
-    	return 0
+    j="$(echo "$*" | grep -F -o -f tags/journal)"
+
+    if [ -n "$j" ]; then # nonempty journal
+
+	# The journal detected may be contained in several journal names.
+	#
+	# We make sure that only one matches.
+	all_possible_matches="$(grep -F "$j" tags/journal | wc -l)"
+	nb_actual_matches=$(
+	    while read a; do
+		echo "$*" | grep -F "$a"
+	    done < <(echo "$all_possible_matches") | wc -l)
+
+	if [ $nb_actual_matches -eq 1 ]; then
+    	    echo "$*" | replace "$j" ", ╠journal=$j╣, "
+    	    return 0
+	fi
     fi
 
     # j="$(echo "$*," | tr '0-9()' ',' | sed 's/ *, */, /g' | grep -F -f /tmp/journals_patterns -o | sed "s/^[ ,\.]*//" | sed "s/,$//")"
