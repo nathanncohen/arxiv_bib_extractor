@@ -15,7 +15,7 @@
 function auto_annotate_from_db() {
     #echo "$l" >&2
     l="$(echo "$*" | sed "s/ *,[,\. ]*/, /g")"
-    tags="$(echo "$l" | tr '0-9();:' ', ' | grep -o -P "(\w[\w-]*\.* )*\w[\w-]*\.{0,1}" | # (Words can contain a '-', i.e. Addison-Wesley)
+    tags="$(echo "$l" | perl -ape "s/╠.*?╣//g" | tr '0-9();:' ', ' | grep -o -P "(\w[\w-]*\.* )*\w[\w-]*\.{0,1}" | # (Words can contain a '-', i.e. Addison-Wesley)
 	while read l; do
 	    grep -o -x -F "$l" tags/* | grep -E '.'
 	done | sed "s/:/ /")"
@@ -100,7 +100,7 @@ function guess_authors () {
     # Starts with Initials.
     # Meant to match the following pattern: I. K. Whatever, K.L. Whateverrr[.,] and O. Thing and J. van der Stuff[.,]
     if [ "${b:1:1}" = "." ]; then
-	aut="$(echo $b | \grep -P -o "^(((([[:upper:]]\.[- ]*)+,*)+ ([a-z]{1,4} )*)[^ ]+( and|[[:punct:]]) *)*")"
+	aut="$(echo $b | \grep -P -o "^(((([[:upper:]]\.[- ]*)+,*)+ *([a-z]{1,4} )*)[^ ]+( and|[[:punct:]]) *)*")"
 	echo "$*" | replace "$aut" "╠authors=$aut╣, "
 	return 0
     fi
@@ -139,6 +139,9 @@ cat |
     sed "s/$/,/" |
     sed "s/[\`ˆˇ´´¨¨˝] *\([[:lower:]]\)/\1/g" | # Bad accents
     perl -ape "s| +// +|, |g" |
+    perl -ape "s/ doi *[:\.] *([^ ]*[^\.,:; ])/, ╠doi=\1╣, /g" |
+    perl -ape "s/http[:\/ ]*dx[\. ]*doi[\. ]*org *\/ *([^ ]*[^ ,\.:;])/, ╠doi=\1╣, /g" |
+    perl -ape "s/ MR[: ]*([0-9]{6})/, ╠MR=\1╣, /g" |
     perl -ape "s/ (Pages|pages|p\.*p\.*|pp|p\.|p|pp\.)* *([0-9]+) *[-–]+ *([0-9]+)/,\. ╠pages=\2–\3╣,/g" |
     perl -ape "s/ ([0-9]+)\(([0-9]+)\):([0-9]+)[–-]+([0-9]+)/, ╠vol=\1╣, ╠issue=\2╣, ╠pages=\3–\4╣, /" | # 52(12):1491–1552
     perl -ape "s/ ([0-9]+):([0-9]+)[–-]+([0-9]+)/, ╠vol=\1╣, ╠pages=\2–\3╣, /" |  # 3:131–150
