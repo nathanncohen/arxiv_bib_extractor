@@ -33,6 +33,16 @@ function auto_annotate_from_db() {
     echo "$l" | perl -ape "s/,[,\. ]*/, /g"
 }
 
+function auto_annotate_from_db_greedy() {
+    l="$*"
+    for t in tags/*; do
+	while read o; do
+	    l="$(echo "$l" | replace " $o" ", ╠$(basename "$t")=$o╣, ")"
+	done < <(echo "$l" | sed "s/╠[^╣]*╣, */, /g" | grep -o -w -F -f "$t")
+    done
+    echo "$l"
+}
+
 function get_tag () {
     while read a; do
 	echo "$a" | grep -o -P "╠$1=[^╣]*╣" | perl -ape "s/^.*=(.*)╣$/\1/g"
@@ -155,7 +165,7 @@ cat |
     perl -ape "s/ [Ii]n [Pp]ress([^a-z])/, ╠in_press╣, \1/g" |
     perl -ape "s/ [Ii]n [Pp]reparation([^a-z])/, ╠preprint╣, \1/g" |
     perl -ape "s/[[:punct:]] *[Ee]xtended [Aa]bstract[[:punct:]]/,/g" |
-    perl -ape "s/[,\.] *[Aa]ccepted *[,\.]/, ╠accepted╣, /g" |
+    perl -ape "s/([,\.\(\)]) *[Aa]ccepted *([\(\),\.])/\1, ╠accepted╣, \2/g" |
     perl -ape "s/[,\.] *[Ss]ubmitted *[,\.]/, ╠submitted╣, /g" |
     perl -ape "s/(in[: ]*|[\.,\(\)] *)* *Proc(\.|eedings*) *((of |the |first |second |third |fourth |[0-9]+ *[[:lower:]]{2} ) *)*/, ╠proceedings╣, /ig" |
     sed "s/[,\.] *\(\w+ *edition\) *[,\.]/, ╠edition_info=\1╣, /Ig" |
@@ -168,6 +178,7 @@ cat |
     while read ll; do parse_journal_from_db "$ll"; done |
     while read ll; do guess_authors "$ll"; done |
     while read ll; do guess_title "$ll"; done |
+    while read ll; do auto_annotate_from_db_greedy "$ll"; done |
 
 
     perl -ape "s/(╠journal=[^╣]*╣)[, ]*([0-9]+)[ ,\.]/\1, ╠vol=\2╣, /g" | # The number that comes after the journal's name is the volume (?)
