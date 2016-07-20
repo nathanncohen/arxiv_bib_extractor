@@ -179,8 +179,9 @@ cat |
     while read ll; do parse_journal_from_db "$ll"; done |
     while read ll; do guess_authors "$ll"; done |
     while read ll; do guess_title "$ll"; done |
-    while read ll; do auto_annotate_from_db_greedy "$ll"; done |
 
+    # The next may be useful for production, but it is hell for testing.
+    # while read ll; do auto_annotate_from_db_greedy "$ll"; done |
 
     perl -ape "s/(╠journal=[^╣]*╣)[, ]*([0-9]+)[ ,\.]/\1, ╠vol=\2╣, /g" | # The number that comes after the journal's name is the volume (?)
     perl -ape "s/(╠journal=[^╣]*╣)[, ]*([0-9]+)\(([0-9]+)\)[ ,\.]/\1, ╠vol=\2╣, ╠issue=\3╣, /g" | # The number that comes after the journal's name is the volume (?)
