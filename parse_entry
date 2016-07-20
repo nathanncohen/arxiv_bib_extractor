@@ -21,6 +21,7 @@ function auto_annotate_from_db() {
 	done | sed "s/:/ /")"
 
     #echo "$l" | tr '0-9()' ', ' | grep -o -P "([\w\-]+\.* )*[\w-]+\.{0,1}" >&2
+    l_save="$l"
     if [ -n "$tags" ]; then
 	while read tag content; do
 	    tag="$(basename "$tag")"
@@ -29,8 +30,14 @@ function auto_annotate_from_db() {
 	    fi
             l="$(echo ${l}, | perl -ape "s/([,\(;\):0-9] *)$content *([\(\),\.0-9])/\1 ╠$tag=$content╣, \2/g")"
 	done < <(echo "$tags")
+	l="$(echo "$l" | perl -ape "s/,[,\. ]*/, /g")"
     fi
-    echo "$l" | perl -ape "s/,[,\. ]*/, /g"
+
+    if [ "$l" = "$l_save" ]; then
+	echo "$l"
+    else
+	auto_annotate_from_db "$l"
+    fi
 }
 
 function auto_annotate_from_db_greedy() {
@@ -182,6 +189,7 @@ cat |
 
     # The next may be useful for production, but it is hell for testing.
     # while read ll; do auto_annotate_from_db_greedy "$ll"; done |
+    while read l; do auto_annotate_from_db "$l"; done |
 
     perl -ape "s/(╠journal=[^╣]*╣)[, ]*([0-9]+)[ ,\.]/\1, ╠vol=\2╣, /g" | # The number that comes after the journal's name is the volume (?)
     perl -ape "s/(╠journal=[^╣]*╣)[, ]*([0-9]+)\(([0-9]+)\)[ ,\.]/\1, ╠vol=\2╣, ╠issue=\3╣, /g" | # The number that comes after the journal's name is the volume (?)
