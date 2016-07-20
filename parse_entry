@@ -152,10 +152,11 @@ cat |
     perl -ape "s/ doi *[:\.] *([^ ]*[^\.,:; ])/, ╠doi=\1╣, /g" |
     perl -ape "s/http[:\/ ]*dx[\. ]*doi[\. ]*org *\/ *([^ ]*[^ ,\.:;])/, ╠doi=\1╣, /g" |
     perl -ape "s/ MR[: ]*([0-9]{6})/, ╠MR=\1╣, /g" |
+    perl -ape "s#arXiv[:/ ] *([0-9]{4}\.[0-9v]+|[^ ]+/[0-9\.]{4,}[0-9])#, ╠arxiv=\1╣, #ig" | # https://arxiv.org/help/arxiv_identifier
     perl -ape "s/ (Pages|pages|p\.*p\.*|pp|p\.|p|pp\.)* *([0-9]+) *[-–]+ *([0-9]+)/,\. ╠pages=\2–\3╣,/g" |
     perl -ape "s/ ([0-9]+)\(([0-9]+)\):([0-9]+)[–-]+([0-9]+)/, ╠vol=\1╣, ╠issue=\2╣, ╠pages=\3–\4╣, /" | # 52(12):1491–1552
     perl -ape "s/ ([0-9]+):([0-9]+)[–-]+([0-9]+)/, ╠vol=\1╣, ╠pages=\2–\3╣, /" |  # 3:131–150
-    perl -ape "s/ [Vv]ol(ume)*[\. ]*([0-9]+)/,\. ╠vol=\2╣, /g" |
+    perl -ape "s/ vol(ume)*[\. ]*([0-9vi]+)/,\. ╠vol=\2╣, /ig" |
     perl -ape "s/ n[o\.]{0,2} *([0-9]+)/, ╠issue=\1╣, /g" |
     perl -ape "s/ ([0-9]+)pp\.*/, ╠numpages=\1╣, /g" |
     perl -ape "s/\(((19|20)[0-9]{2})\)/,\.╠year=\1╣, /g" |
