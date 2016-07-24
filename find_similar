@@ -1,0 +1,25 @@
+#!/bin/bash
+
+#echo "$*" | ./parse_entry | \grep -o -P "╠.*?╣"
+while read l; do
+    if [[ "$l" == title=* ]]; then
+	title="$(echo "$l" | cut -d "=" -f 2-)"
+    elif [[ "$l" == vol=* ]]; then
+	 vol="$(echo "$l" | cut -d "=" -f 2-)"
+    elif [[ "$l" == pages=* ]]; then
+	 pages="$(echo "$l" | cut -d "=" -f 2-)"
+    elif [[ "$l" == authors=* ]]; then
+	 authors="$(echo "$l" | cut -d "=" -f 2-)"
+    fi
+done< <(echo "$*" | ./parse_entry | \grep -o -P "╠.*?╣" | sed "s/╠\(.*\)╣/\1/g")
+
+(
+if [ -n "$journal" ]; then
+    cat ~/all_parsed | grep -F -i "journal=$journal"
+fi
+if [ -n "$vol" ] && [ -n "$pages" ]; then
+    cat ~/all_parsed | grep -F "╠vol=$vol╣" | grep -F "╠pages=$pages╣"
+fi
+) | sort -u
+
+# Recursive calls till exhausted ???

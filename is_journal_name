@@ -1,0 +1,14 @@
+#!/bin/bash
+
+while read j; do
+    test -z "$j" && continue
+    e="$(echo "$j" | perl -ne 'print quotemeta($_)')"
+    e="${e%?}"
+    cat ~/all_parsed |
+	grep -v "journal=" |
+	grep "issue=" |
+	grep "pages=" |
+	grep -E "(,| [[:lower:]]+\.) *${e} *[,0-9\(\)]" |
+	perl -ape "s/.*?pages=(.*?)╣.*/\1/g" | grep -o "[0-9]*" | sort -u | wc -l | xargs test 10 -le &&
+	echo "$j"
+done
