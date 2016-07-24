@@ -171,10 +171,10 @@ cat |
     sed "s/[\`ˆˇ´´¨¨˝˜] *\([[:lower:]]\)/\1/g" | # Bad accents
     perl -ape "s| +// +|, |g" |
     perl -ape "s/ doi *[:\.] *([^ ]+[^\.,:; ])/, ╠doi=\1╣, /ig" |
-    perl -ape "s/[^ ]*[[:punct:]]doi[[:punct:]][^ ]*(10(([\.\/] *)+[^, ]+)+[^\.,:; ])/, ╠doi2=\1╣, /ig" |
+    perl -ape "s/[^ ]*[[:punct:]]doi[[:punct:]][^ ]*(10(([\.\/] *)+[^, ]+)+[^\.,:; ])/, ╠doi=\1╣, /ig" |
     perl -ape "s/http[:\/ ]*dx[\. ]*doi[\. ]*org *\/ *([^ ]*[^ ,\.:;])/, ╠doi=\1╣, /g" |
     perl -ape "s/ MR[: ]*([0-9]{6})/, ╠MR=\1╣, /g" |
-    perl -ape "s/([ ,(])(ISBN(-13|-10)|ISSN)[ :\-#]+(([0-9]+[ -]*)*X?)/\1, ╠isbn_issn=\4╣, /ig" |
+    perl -ape "s/([ ,(])(ISBN(-13|-10)*|ISSN)[ :\-#]+(([0-9]+[ -]*)*X?)/\1, ╠isbn_issn=\4╣, /ig" |
     perl -ape "s#arXiv[:/ ] *([0-9]{4}\.[0-9v]+|[^ ]+/[0-9\.]{4,}[0-9])#, ╠arxiv=\1╣, #ig" | # https://arxiv.org/help/arxiv_identifier
     perl -ape "s/ (Pages|pages|p\.*p\.*|pp|p\.|p|pp\.)* *([0-9]+) *[-–]+ *([0-9]+)[,\. ]/,\. ╠pages=\2–\3╣,/g" |
     perl -ape "s/ ([0-9]+)\(([0-9]+)\):([0-9]+)[–-]+([0-9]+)/, ╠vol=\1╣, ╠issue=\2╣, ╠pages=\3–\4╣, /" | # 52(12):1491–1552
@@ -197,8 +197,8 @@ cat |
     perl -ape "s/”/”, /g" |
     perl -ape "s/“/, “/g" |
     sed "s/,[ ,\.]*/, /g" |
+    perl -ape "s/╣, (in|of) /╣, /g" |
     while read l; do auto_annotate_from_db "$l"; done |
-
     # Must not reomve Proc. before the journal is parsed
     while read ll; do parse_journal_from_db "$ll"; done |
     while read ll; do parse_proceedings "$ll"; done |
