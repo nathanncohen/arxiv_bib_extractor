@@ -1,6 +1,6 @@
 #!/bin/bash
 
-block_size=10
+block_size=1
 function batchfind () {
     find "$*" -type f | tr '\n' ' ' | perl -ape "s/(([^ ]* ){0,$block_size})/\1\t/g" | tr '\t' '\n' | grep -E "."
 }
@@ -13,4 +13,6 @@ while [ 1 ]; do
     batchfind "arxiv/4-bibs/" | while read i; do
 	echo "cat $i | ./parse_entry";
     done | parallel > all_parsed
+    echo "Parsing ends"
+    date
 done
