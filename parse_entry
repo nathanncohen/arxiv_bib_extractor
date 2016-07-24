@@ -21,6 +21,7 @@ function auto_annotate_from_db() {
 	done | sed "s/:/ /")"
 
     #echo "$l" | tr '0-9()' ', ' | grep -o -P "([\w\-]+\.* )*[\w-]+\.{0,1}" >&2
+    #echo $tags >&2
     l_save="$l"
     if [ -n "$tags" ]; then
 	while read tag content; do
@@ -66,14 +67,14 @@ function replace () {
 # names contain lots of '.', and sometimes appear right after the '.' at the end
 # of the title. Sometimes they also contain ','
 function parse_journal_from_db() {
-    if echo "$*" | grep -P "╠journal" > /dev/null; then
+    if echo "$*" | grep -P "╠journal=" > /dev/null; then
 	echo "$*" && return 0
     fi
 
     # TRY ONLY THOSE CONTAINING A ',' first ?
 
     # Try to remove the first suspicious '.' (end of the title) and see if it works.
-    if echo "$*" | grep -P " [[:lower:]]+\." > /dev/null; then
+    if echo "$*" | perl -ape "s/╠.*?╣//g" | grep -P " [[:lower:]]+\." > /dev/null; then
 	j="$(auto_annotate_from_db "$(echo "$*" | perl -ape "s/( [0-9[[:lower:]]]+)\./\1, /g")" | get_tag journal)"
 	if [ -n "$j" ]; then
 	    echo "$*" | replace "$j" ", ╠journal=$j╣, "
@@ -82,14 +83,14 @@ function parse_journal_from_db() {
     fi
 
     # Try to see if some journal fits, and check (badly) that only one fits (the test is too restrictive but correct) -- ARRANGE !!!!!!!!!!!!
-    j="$(echo "$*" | grep -F -o -f tags/journal)"
-
+    j="$(echo "$*" | perl -ape "s/╠.*?╣//g" | grep -F -o -f tags/journal | head -n 1)"
+    #echo ${j} >&2
     if [ -n "$j" ]; then # nonempty journal
 
 	# The journal detected may be contained in several journal names.
 	#
 	# We make sure that only one matches.
-	all_possible_matches="$(grep -F "$j" tags/journal | wc -l)"
+	all_possible_matches="$(grep -F "$j" tags/journal | sort -u)"
 	nb_actual_matches=$(
 	    while read a; do
 		echo "$*" | grep -F "$a"
@@ -109,6 +110,18 @@ function parse_journal_from_db() {
     # 	echo "$*" | replace "$j" ", ╠journal=$j╣, "
     # fi
     echo "$*"
+}
+
+cardinal_regex="((first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth|thirteenth|fourteenth|fifteenth|sixteenth|seventeenth|eighteenth|nineteenth|twentieth|twenty|thirty|forty|fifty|[0-9]+ *[[:lower:]]{2} )[ \-]*)*"
+
+function parse_proceedings () {
+    p="$(echo "$*" | perl -ape "s/╠.*?╣//g" | grep -i -E -o "(in[: ]+|[\.,\(\):] *)Proc(\.|eedings*) *((of|the) *)*($cardinal_regex)*(annual)* *" | head -n 1)"
+    if [ -n "$p" ]; then
+	echo "$*" | replace "$p" ", ╠proceedings╣, "
+	return 0
+    fi
+    echo "$*"
+    return 0
 }
 
 function guess_authors () {
@@ -153,10 +166,9 @@ function guess_title () {
 }
 
 
-cardinal_regex="((first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth|thirteenth|fourteenth|fifteenth|sixteenth|seventeenth|eighteenth|nineteenth|twentieth|twenty|thirty|forty|fifty|[0-9]+ *[[:lower:]]{2} )[ \-]*)*"
 cat |
     sed "s/$/,/" |
-    sed "s/[\`ˆˇ´´¨¨˝] *\([[:lower:]]\)/\1/g" | # Bad accents
+    sed "s/[\`ˆˇ´´¨¨˝˜] *\([[:lower:]]\)/\1/g" | # Bad accents
     perl -ape "s| +// +|, |g" |
     perl -ape "s/ doi *[:\.] *([^ ]+[^\.,:; ])/, ╠doi=\1╣, /ig" |
     perl -ape "s/[^ ]*[[:punct:]]doi[[:punct:]][^ ]*(10(([\.\/] *)+[^, ]+)+[^\.,:; ])/, ╠doi2=\1╣, /ig" |
@@ -167,7 +179,7 @@ cat |
     perl -ape "s/ (Pages|pages|p\.*p\.*|pp|p\.|p|pp\.)* *([0-9]+) *[-–]+ *([0-9]+)[,\. ]/,\. ╠pages=\2–\3╣,/g" |
     perl -ape "s/ ([0-9]+)\(([0-9]+)\):([0-9]+)[–-]+([0-9]+)/, ╠vol=\1╣, ╠issue=\2╣, ╠pages=\3–\4╣, /" | # 52(12):1491–1552
     perl -ape "s/ ([0-9]+):([0-9]+)[–-]+([0-9]+)/, ╠vol=\1╣, ╠pages=\2–\3╣, /" |  # 3:131–150
-    perl -ape "s/ vol(ume)*[\. ]*([0-9vi]+)/,\. ╠vol=\2╣, /ig" |
+    perl -ape "s/ vol(ume)*[\. ]*([0-9vi]+)( of)*/,\. ╠vol=\2╣, /ig" |
     perl -ape "s/ n[o\.]{0,2} *([0-9]+)/, ╠issue=\1╣, /g" |
     perl -ape "s/ ([0-9]+)pp\.*/, ╠numpages=\1╣, /g" |
     perl -ape "s/ \(((19|20)[0-9]{2})\)/,\.╠year=\1╣, /g" |
@@ -179,7 +191,6 @@ cat |
     perl -ape "s/[[:punct:]] *[Ee]xtended [Aa]bstract[[:punct:]]/,/g" |
     perl -ape "s/([,\.\(\)]) *[Aa]ccepted *([\(\),\.])/\1, ╠accepted╣, \2/g" |
     perl -ape "s/[,\.] *[Ss]ubmitted *[,\.]/, ╠submitted╣, /g" |
-    perl -ape "s/(in[: ]+|[\.,\(\):] *)Proc(\.|eedings*) *((of|the) *)*($cardinal_regex)*(annual)* */, ╠proceedings╣, /ig" |
     sed "s/[,\.] *\(\w+ *edition\) *[,\.]/, ╠edition_info=\1╣, /Ig" |
     sed "s/[,\.] *\([0-9]*[[:lower:]]* ed\.\) *[\,\,]/, ╠edition_info=\1╣, /Ig" |
 
@@ -187,7 +198,12 @@ cat |
     perl -ape "s/“/, “/g" |
     sed "s/,[ ,\.]*/, /g" |
     while read l; do auto_annotate_from_db "$l"; done |
+
+    # Must not reomve Proc. before the journal is parsed
     while read ll; do parse_journal_from_db "$ll"; done |
+    while read ll; do parse_proceedings "$ll"; done |
+    while read ll; do parse_journal_from_db "$ll"; done |
+
     while read ll; do guess_authors "$ll"; done |
     while read ll; do guess_title "$ll"; done |
 
@@ -198,4 +214,5 @@ cat |
     perl -ape "s/(╠journal=[^╣]*╣)[, ]*([0-9]+)[ ,\.]/\1, ╠vol=\2╣, /g" | # The number that comes after the journal's name is the volume (?)
     perl -ape "s/(╠journal=[^╣]*╣)[, ]*([0-9]+)\(([0-9]+)\)[ ,\.]/\1, ╠vol=\2╣, ╠issue=\3╣, /g" | # The number that comes after the journal's name is the volume (?)
     perl -ape "s/,[ \.,]*/, /g" |
+    perl -ape "s/^\[[^ ]*\][ ,]*//g" |
     cat

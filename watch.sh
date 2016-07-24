@@ -7,7 +7,7 @@ function batchfind () {
 
 # Recomputes 'all_parsed' whenever parse_entry gets modified
 while [ 1 ]; do
-    find parse_entry -newer all_parsed | grep "" > /dev/null || inotifywait -e MODIFY parse_entry
+    find parse_entry -newer all_parsed | grep "" > /dev/null || inotifywait -e MODIFY parse_entry tags/*
     date
     echo "Parsing begins"
     batchfind "arxiv/4-bibs/" | while read i; do
