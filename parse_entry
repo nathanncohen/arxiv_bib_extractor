@@ -135,8 +135,8 @@ function guess_authors () {
 	return 0
     fi
 
-    # Same in the other order, i.e. Whatever I. K., Whateverrrrr K. L.,
-    aut="$(echo $b | \grep -P -o "^((\w{1,4} )*[^ ]+[[:punct:]]* +([[:upper:]][[:punct:]]+ *)+( and|[[:punct:]])+ *)*")"
+    # Same in the other order, i.e. Whatever I. K., Whateverrrrr K. L., #
+    aut="$(echo $b | \grep -P -o "^((\w{1,4} )*[^ ]+[[:punct:]]* +([[:upper:]][[:punct:]]+ *)+( and|[[:punct:]])* *)*(et al\.[ [[:punct:]]]*)*")"
     if [ -n "$aut" ]; then
 	echo "$*" | replace "$aut" "╠authors=$aut╣, "
 	return 0
