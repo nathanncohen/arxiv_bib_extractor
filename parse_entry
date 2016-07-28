@@ -84,7 +84,7 @@ function parse_journal_from_db() {
 
 	if [ $nb_actual_matches -eq 1 ]; then
 	    jp="$(echo "$j" | perl -ne 'print quotemeta($_)')"
-    	    echo "$*" | perl -ape "s/([[:lower:]][^ ]*\.|[,0-9:;]) *${jp} *([,\.0-9;:])/\1, ╠journal=$j╣, \2/g"
+    	    echo "$*" | perl -ape "s/([[:lower:]][^ ]*\.|[,0-9:;]) *${jp} *([,\.0-9;:])/\1, ╠journal=${jp}╣, \2/g"
     	    return 0
 	fi
     done < <(echo "$*" | perl -ape "s/╠.*?╣//g" | grep -F -o -f tags/journal | head -n 1)
