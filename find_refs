@@ -4,10 +4,6 @@
 
 export VERBOSE=0
 
-source find_authors
-source find_title
-source find_journal
-
 # Extract the text if pdf input
 file="$*"
 if [ "${file:0:4}" == "http" ]; then
@@ -25,7 +21,7 @@ if [ "$extension" = "pdf" ]; then
 fi
 
 # Cool case when all references start with [number]
-./find_bibentries "$file" | ./parse_entry
+./find_bibentries "$file"  | ./parse_entry
 
-echo "(Uncaught refs) $((diff <(grep -o "\[[a-zA-Z]*[0-9]*\]" "$file" | sort -u) <(grep -o "\[[a-zA-Z]*[0-9]*\]" "/tmp/whatever_tmp" | sort -u)) | grep "^< " | tr -d '\n< ')" 1>&2
+#echo "(Uncaught refs) $((diff <(grep -o "\[[a-zA-Z]*[0-9]*\]" "$file" | sort -u) <(grep -o "\[[a-zA-Z]*[0-9]*\]" "/tmp/whatever_tmp" | sort -u)) | grep "^< " | tr -d '\n< ')" 1>&2
 echo "(txt source) $file" 1>&2

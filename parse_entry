@@ -71,22 +71,8 @@ function parse_journal_from_db() {
 	echo "$*" && return 0
     fi
 
-    # TRY ONLY THOSE CONTAINING A ',' first ?
-
-    # Try to remove the first suspicious '.' (end of the title) and see if it works.
-    if echo "$*" | perl -ape "s/╠.*?╣//g" | grep -P " [[:lower:]]+\." > /dev/null; then
-	j="$(auto_annotate_from_db "$(echo "$*" | perl -ape "s/( [0-9[[:lower:]]]+)\./\1, /g")" | get_tag journal)"
-	if [ -n "$j" ]; then
-	    echo "$*" | replace "$j" ", ╠journal=$j╣, "
-	    return 0
-	fi
-    fi
-
     # Try to see if some journal fits, and check (badly) that only one fits (the test is too restrictive but correct) -- ARRANGE !!!!!!!!!!!!
-    j="$(echo "$*" | perl -ape "s/╠.*?╣//g" | grep -F -o -f tags/journal | head -n 1)"
-    #echo ${j} >&2
-    if [ -n "$j" ]; then # nonempty journal
-
+    while read j; do # nonempty journal
 	# The journal detected may be contained in several journal names.
 	#
 	# We make sure that only one matches.
@@ -97,10 +83,11 @@ function parse_journal_from_db() {
 	    done < <(echo "$all_possible_matches") | wc -l)
 
 	if [ $nb_actual_matches -eq 1 ]; then
-    	    echo "$*" | replace "$j" ", ╠journal=$j╣, "
+	    jp="$(echo "$j" | perl -ne 'print quotemeta($_)')"
+    	    echo "$*" | perl -ape "s/([[:lower:]][^ ]*\.|[,0-9:;]) *${jp} *([,\.0-9;:])/\1, ╠journal=$j╣, \2/g"
     	    return 0
 	fi
-    fi
+    done < <(echo "$*" | perl -ape "s/╠.*?╣//g" | grep -F -o -f tags/journal | head -n 1)
 
     # j="$(echo "$*," | tr '0-9()' ',' | sed 's/ *, */, /g' | grep -F -f /tmp/journals_patterns -o | sed "s/^[ ,\.]*//" | sed "s/,$//")"
     # test $? -eq 0 || exit 1
@@ -125,7 +112,7 @@ function parse_proceedings () {
 }
 
 function guess_authors () {
-    b="$(echo "$*" | sed "s/^.*\] *//"g | sed "s/“.*//g")"
+    b="$(echo "$*" | sed "s/^.*\] *//"g | sed "s/”“.*//g")"
 
     # Starts with Initials.
     # Meant to match the following pattern: I. K. Whatever, K.L. Whateverrr[.,] and O. Thing and J. van der Stuff[.,]
@@ -167,8 +154,8 @@ function guess_title () {
 
 
 cat |
-    sed "s/$/,/" |
-    sed "s/[\`ˆˇ´´¨¨˝˜] *\([[:lower:]]\)/\1/g" | # Bad accents
+    sed "s/$/, , , , ,/" |
+    sed "s/[\`˚ˆˇ´´¨¨˝˜] *\([[:lower:]]\)/\1/g" | # Bad accents
     perl -ape "s| +// +|, |g" |
     perl -ape "s/ doi *[:\.] *([^ ]+[^\.,:; ])/, ╠doi=\1╣, /ig" |
     perl -ape "s/[^ ]*[[:punct:]]doi[[:punct:]][^ ]*(10(([\.\/] *)+[^, ]+)+[^\.,:; ])/, ╠doi=\1╣, /ig" |
