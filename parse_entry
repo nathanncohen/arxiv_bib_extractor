@@ -12,13 +12,13 @@
 # ====> THIS FUNCTION SHOULD BE *CLEAN*, i.e. NO F**** GUESSES HERE <====
 #
 # (it must work for *all* kinds of keywords at once)
-tagfiles="-f $(find tags/ -type f | xargs echo | sed 's/ / -f /g')"
+tagfiles="-f $(find tags/ -type f -o -type l | xargs echo | sed 's/ / -f /g')"
 function auto_annotate_from_db() {
     #echo "$l" >&2
     l="$(echo "$*" | sed "s/ *,[,\. ]*/, /g")"
 
     tags="$(echo "$l" | perl -ape "s/╠[^╣]*╣//g" | grep -o -F $tagfiles | while read l; do grep -F -x "$l" tags/*; done | sed 's/:/ /')"
-
+    #echo $tags >&2
     l_save="$l"
     if [ -n "$tags" ]; then
 	while read tag content; do
