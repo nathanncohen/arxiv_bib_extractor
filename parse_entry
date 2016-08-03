@@ -26,7 +26,8 @@ function auto_annotate_from_db() {
 	    if [ "$tag" = "journal" ] && [ $(grep -F "$content" "tags/$tag" | grep "," | wc -l) -ge 2 ]; then
 		continue
 	    fi
-            l="$(echo ${l}, | perl -ape "s/([,\(;\):0-9] *)$content *([\(\),\.0-9])/\1 ╠$tag=$content╣, \2/g")"
+	    content_reg="$(echo "$content" | perl -ne 'print quotemeta($_)')"
+            l="$(echo ${l}, | perl -ape "s/([,\(;\):0-9] *)$content_reg *([\(\),\.0-9])/\1 ╠$tag=$content_reg╣, \2/g")"
 	done < <(echo "$tags")
 	l="$(echo "$l" | perl -ape "s/,[,\. ]*/, /g")"
     fi
