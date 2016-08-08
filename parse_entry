@@ -196,8 +196,8 @@ cat |
     # while read ll; do auto_annotate_from_db_greedy "$ll"; done |
     while read l; do auto_annotate_from_db "$l"; done |
 
+    perl -ape "s/(╠journal=[^╣]*╣)[, ]*([0-9]+) *\(([0-9]+)\)[ ,\.]/\1, ╠vol=\2╣, ╠issue=\3╣, /g" | # The number that comes after the journal's name is the volume (?)
     perl -ape "s/(╠journal=[^╣]*╣)[, ]*([0-9]+)[ ,\.]/\1, ╠vol=\2╣, /g" | # The number that comes after the journal's name is the volume (?)
-    perl -ape "s/(╠journal=[^╣]*╣)[, ]*([0-9]+)\(([0-9]+)\)[ ,\.]/\1, ╠vol=\2╣, ╠issue=\3╣, /g" | # The number that comes after the journal's name is the volume (?)
     perl -ape "s/,[ \.,]*/, /g" |
     perl -ape "s/^\[[^ ]*\][ ,]*//g" |
     cat
