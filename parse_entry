@@ -160,7 +160,7 @@ cat |
     perl -ape "s/http[:\/ ]*dx[\. ]*doi[\. ]*org *\/ *([^ ]*[^ ,\.:;])/, ╠doi=\1╣, /g" |
     perl -ape "s/ MR[: ]*([0-9]{6})/, ╠MR=\1╣, /g" |
     perl -ape "s/([ ,(])(ISBN(-13|-10)*|ISSN)[ :\-#]+(([0-9]+[ -]*)*X?)/\1, ╠isbn_issn=\4╣, /ig" |
-    perl -ape "s/ n[o\.]{0,2} *([0-9]+[-–]*[0-9]*)/, ╠issue=\1╣, /g" | # 'no. 1-3'
+    perl -ape "s/ n[o\.]{0,2} *([0-9]+[-–]*[0-9]*)[ ,\.]/, ╠issue=\1╣, /g" | # 'no. 1-3', 'hard to approximate within n1−ε'
     perl -ape "s/ vol(umes*)*[\. ]*([0-9vi]+[-–]*[0-9]*)( of)*/,\. ╠vol=\2╣, /ig" | # 'volume 1–4'
     perl -ape "s#arXiv[:/ ] *([0-9]{4}\.[0-9v]+|[^ ]+/[0-9\.]{4,}[0-9])#, ╠arxiv=\1╣, #ig" | # https://arxiv.org/help/arxiv_identifier
     perl -ape "s/ (Pages|pages|p\.*p\.*|pp|p\.|p|pp\.)* *([0-9]+) *[-–]+ *([0-9]+)[,\. ]/,\. ╠pages=\2–\3╣, /g" |
