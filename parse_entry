@@ -20,7 +20,7 @@ function auto_annotate_from_db() {
     l_save="$l"
     while read content; do
 	content_reg="$(echo "$content" | perl -ne 'print quotemeta($_)')"
-        l="$(echo ${l}, | perl -ape "s/([,\(;\):0-9] *)$content_reg *([\(\),\.0-9])/\1 ╠?=$content_reg╣, \2/g")"
+        l="$(echo ${l}, | perl -ape "s/([,\(;\):0-9] +)$content_reg *([\(\),\.0-9])/\1 ╠?=$content_reg╣, \2/g")"
     done < <(echo "$l" | perl -ape "s/╠[^╣]*╣//g" | grep -o -F $tagfiles)
     l="$(echo "$l" | perl -ape "s/,[,\. ]*/, /g")"
 
@@ -65,7 +65,7 @@ function parse_journal_from_db() {
 
     while read j; do # nonempty journal
 	jp="$(echo "$j" | perl -ne 'print quotemeta($_)')"
-    	i="$(echo "$i" | perl -ape "s/([[:lower:]][^ ]*\.|[,0-9:;]) *([Ii]n)* *${jp} *([,\.0-9;:])/\1, ╠journal=${jp}╣, \3/g")"
+    	i="$(echo "$i" | perl -ape "s/([[:lower:]][^ ]*\.|[,0-9:;]) *( [Ii]n)* +${jp} *([,\.0-9;:])/\1, ╠journal=${jp}╣, \3/g")"
     done < <(echo "$i" | perl -ape "s/╠.*?╣//g" | grep -F -o -f tags/journal)
 
     echo "$i"
