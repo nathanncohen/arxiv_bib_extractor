@@ -12,25 +12,17 @@
 # ====> THIS FUNCTION SHOULD BE *CLEAN*, i.e. NO F**** GUESSES HERE <====
 #
 # (it must work for *all* kinds of keywords at once)
-tagfiles="-f $(find tags/ -type f -o -type l | xargs echo | sed 's/ / -f /g')"
+tagfiles="-f $(find tags/ -type f -o -type l -not -name journal | xargs echo | sed 's/ / -f /g')" # except 'journal'
 function auto_annotate_from_db() {
     #echo "$l" >&2
     l="$(echo "$*" | sed "s/ *,[,\. ]*/, /g")"
 
-    tags="$(echo "$l" | perl -ape "s/╠[^╣]*╣//g" | grep -o -F $tagfiles | while read l; do grep -F -x "$l" tags/*; done | sed 's/:/ /')"
-    #echo $tags >&2
     l_save="$l"
-    if [ -n "$tags" ]; then
-	while read tag content; do
-	    tag="$(basename "$tag")"
-	    if [ "$tag" = "journal" ] && [ $(grep -F "$content" "tags/$tag" | grep "," | wc -l) -ge 2 ]; then
-		continue
-	    fi
-	    content_reg="$(echo "$content" | perl -ne 'print quotemeta($_)')"
-            l="$(echo ${l}, | perl -ape "s/([,\(;\):0-9] *)$content_reg *([\(\),\.0-9])/\1 ╠$tag=$content_reg╣, \2/g")"
-	done < <(echo "$tags")
-	l="$(echo "$l" | perl -ape "s/,[,\. ]*/, /g")"
-    fi
+    while read content; do
+	content_reg="$(echo "$content" | perl -ne 'print quotemeta($_)')"
+        l="$(echo ${l}, | perl -ape "s/([,\(;\):0-9] *)$content_reg *([\(\),\.0-9])/\1 ╠?=$content_reg╣, \2/g")"
+    done < <(echo "$l" | perl -ape "s/╠[^╣]*╣//g" | grep -o -F $tagfiles)
+    l="$(echo "$l" | perl -ape "s/,[,\. ]*/, /g")"
 
     if [ "$l" = "$l_save" ]; then
 	echo "$l"
@@ -65,36 +57,18 @@ function replace () {
 # names contain lots of '.', and sometimes appear right after the '.' at the end
 # of the title. Sometimes they also contain ','
 function parse_journal_from_db() {
-    if echo "$*" | grep -P "╠journal=" > /dev/null; then
-	echo "$*" && return 0
+    i="$*"
+
+    if echo "$i" | grep -P "╠journal=" > /dev/null; then
+	echo "$i" && return 0
     fi
 
-    # Try to see if some journal fits, and check (badly) that only one fits (the test is too restrictive but correct) -- ARRANGE !!!!!!!!!!!!
     while read j; do # nonempty journal
-	# The journal detected may be contained in several journal names.
-	#
-	# We make sure that only one matches.
-	all_possible_matches="$(grep -F "$j" tags/journal | sort -u)"
-	nb_actual_matches=$(
-	    while read a; do
-		echo "$*" | grep -F "$a"
-	    done < <(echo "$all_possible_matches") | wc -l)
+	jp="$(echo "$j" | perl -ne 'print quotemeta($_)')"
+    	i="$(echo "$i" | perl -ape "s/([[:lower:]][^ ]*\.|[,0-9:;]) *([Ii]n)* *${jp} *([,\.0-9;:])/\1, ╠journal=${jp}╣, \3/g")"
+    done < <(echo "$i" | perl -ape "s/╠.*?╣//g" | grep -F -o -f tags/journal)
 
-	if [ $nb_actual_matches -eq 1 ]; then
-	    jp="$(echo "$j" | perl -ne 'print quotemeta($_)')"
-    	    echo "$*" | perl -ape "s/([[:lower:]][^ ]*\.|[,0-9:;]) *${jp} *([,\.0-9;:])/\1, ╠journal=${jp}╣, \2/g"
-    	    return 0
-	fi
-    done < <(echo "$*" | perl -ape "s/╠.*?╣//g" | grep -F -o -f tags/journal | head -n 1)
-
-    # j="$(echo "$*," | tr '0-9()' ',' | sed 's/ *, */, /g' | grep -F -f /tmp/journals_patterns -o | sed "s/^[ ,\.]*//" | sed "s/,$//")"
-    # test $? -eq 0 || exit 1
-    # if [ -z "$j" ]; then
-    # 	echo "$*"
-    # else
-    # 	echo "$*" | replace "$j" ", ╠journal=$j╣, "
-    # fi
-    echo "$*"
+    echo "$i"
 }
 
 cardinal_regex="((first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth|thirteenth|fourteenth|fifteenth|sixteenth|seventeenth|eighteenth|nineteenth|twentieth|twenty|thirty|forty|fifty|[0-9]+ *[[:lower:]]{2} )[ \-]*)*"
