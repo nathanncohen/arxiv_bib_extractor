@@ -84,7 +84,7 @@ function parse_proceedings () {
 }
 
 function guess_authors () {
-    b="$(echo "$*" | sed "s/^.*\] *//"g | sed "s/”“.*//g")"
+    b="$(echo "$*" | sed "s/^.*\] *//"g | sed "s/[”“╠].*//g")"
 
     # Starts with Initials.
     # Meant to match the following pattern: I. K. Whatever, K.L. Whateverrr[.,] and O. Thing and J. van der Stuff[.,]
