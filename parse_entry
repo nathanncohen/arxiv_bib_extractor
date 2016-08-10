@@ -120,7 +120,7 @@ function longest_line () {
     echo "$l"
 }
 function guess_title () {
-    b="$(echo "$*" | sed "s/^.*authors=[^╣]*╣[,\. ]*//" | sed "s/╠.*//g" | grep -P -o "[“ ]*[[:digit:]|[:upper:]][^,\.”]*([,\. ]+[[:lower:]][^,\.]*)*" | perl -ape "s/^( |[[:punct]]|“)*//g" | longest_line)"
+    b="$(echo "$*" | sed "s/^.*authors=[^╣]*╣[,\. ]*//" | sed "s/╠[^y].*//g" | perl -ape "s/[, ]*╠.*?╣[, ]*/\n/g" | grep -P -o "[“ ]*[[:digit:]|[:upper:]][^,\.”]*([,\. ]+[[:lower:]][^,\.]*)*" | perl -ape "s/^( |[[:punct]]|“)*//g" | longest_line)"
     echo "$*" | replace "$b" ", ╠title=$b╣, "
 }
 
