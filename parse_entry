@@ -84,7 +84,7 @@ function parse_proceedings () {
 }
 
 function guess_authors () {
-    b="$(echo "$*" | sed "s/^.*\] *//"g | sed "s/[”“╠].*//g")"
+    b="$(echo "$*" | sed "s/^.*\] *//"g | sed "s/[”“╠[:digit:]].*//g")"
 
     # Starts with Initials.
     # Meant to match the following pattern: I. K. Whatever, K.L. Whateverrr[.,] and O. Thing and J. van der Stuff[.,]
@@ -120,7 +120,7 @@ function longest_line () {
     echo "$l"
 }
 function guess_title () {
-    b="$(echo "$*" | sed "s/^.*authors=[^╣]*╣[,\. ]*//" | sed "s/╠.*//g" | grep -P -o "[“ ]*[[:upper:]][^,\.”]*([,\. ]+[[:lower:]][^,\.]*)*" | perl -ape "s/^( |[[:punct]]|“)*//g" | longest_line)"
+    b="$(echo "$*" | sed "s/^.*authors=[^╣]*╣[,\. ]*//" | sed "s/╠[^y].*//g" | grep -P -o "[“ ]*[[:digit:]|[:upper:]][^,\.”]*([,\. ]+[[:lower:]][^,\.]*)*" | perl -ape "s/^( |[[:punct]]|“)*//g" | longest_line)"
     echo "$*" | replace "$b" ", ╠title=$b╣, "
 }
 
