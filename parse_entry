@@ -65,7 +65,7 @@ function parse_journal_from_db() {
 
     while read j; do # nonempty journal
 	jp="$(echo "$j" | perl -ne 'print quotemeta($_)')"
-    	i="$(echo "$i" | perl -ape "s/([[:lower:]][^ ]*\.|[,0-9:;]) *( [Ii]n)* +${jp} *([,\.0-9;:])/\1, ╠journal=${jp}╣, \3/g")"
+    	i="$(echo "$i" | perl -ape "s/([[:lower:]][^ ]*\.|[,0-9:;]) *( [Ii]n)* +${jp} *([,\.0-9;:\(\)])/\1, ╠journal=${jp}╣, \3/g")"
     done < <(echo "$i" | perl -ape "s/╠.*?╣//g" | grep -F -o -f tags/journal)
 
     echo "$i"
@@ -137,7 +137,7 @@ cat |
     perl -ape "s/ n[o\.]{0,2} *([0-9]+[-–]*[0-9]*)[ ,\.]/, ╠issue=\1╣, /g" | # 'no. 1-3', 'hard to approximate within n1−ε'
     perl -ape "s/ vol(umes*)*[\. ]*([0-9vi]+([-–]+[0-9]+)*)( of)*/,\. ╠vol=\2╣, /ig" | # 'volume 1–4'
     perl -ape "s#arXiv[:/ ] *([0-9]{4}\.[0-9v]+|[^ ]+/[0-9\.]{4,}[0-9])#, ╠arxiv=\1╣, #ig" | # https://arxiv.org/help/arxiv_identifier
-    perl -ape "s/ (Pages|pages|p\.*p\.*|pp|p\.|p|pp\.)* *([0-9]+) *[-–]+ *([0-9]+)[,\. ]/,\. ╠pages=\2–\3╣, /g" |
+    perl -ape "s/ (Pages|pages|p\.*p\.*|pp|p\.|p|pp\.)* *([0-9]+) *[-–]+ *([0-9]+)[,\.; ]/,\. ╠pages=\2–\3╣, /g" |
     perl -ape "s/ ([0-9]+)\(([0-9-]+)\):([0-9]+)[ –-]+([0-9]+)/, ╠vol=\1╣, ╠issue=\2╣, ╠pages=\3–\4╣, /" | # 52(12):1491–1552
     perl -ape "s/ ([0-9]+):([0-9]+)[–-]+([0-9]+)/, ╠vol=\1╣, ╠pages=\2–\3╣, /" |  # 3:131–150
     perl -ape "s/ ([0-9]+)pp\.*/, ╠numpages=\1╣, /g" |
@@ -170,7 +170,7 @@ cat |
     # while read ll; do auto_annotate_from_db_greedy "$ll"; done |
     while read l; do auto_annotate_from_db "$l"; done |
 
-    perl -ape "s/(╠journal=[^╣]*╣)[, ]*([0-9]+) *\(([0-9]+)\)[ ,\.]/\1, ╠vol=\2╣, ╠issue=\3╣, /g" | # The number that comes after the journal's name is the volume (?)
+    perl -ape "s/(╠journal=[^╣]*╣)[, ]*([0-9]+) *\(([0-9]+)\)[ ,\.]/\1, ╠vol=\2╣, ╠issue=\3╣, /g" | # '[journal], vol (issue)'
     perl -ape "s/(╠journal=[^╣]*╣)[, ]*([0-9]+)[ ,\.]/\1, ╠vol=\2╣, /g" | # The number that comes after the journal's name is the volume (?)
     perl -ape "s/,[ \.,]*/, /g" |
     perl -ape "s/^\[[^ ]*\][ ,]*//g" |
