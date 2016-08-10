@@ -20,7 +20,7 @@ function auto_annotate_from_db() {
     l_save="$l"
     while read content; do
 	content_reg="$(echo "$content" | perl -ne 'print quotemeta($_)')"
-        l="$(echo ${l}, | perl -ape "s/([,\(;\):0-9] +)$content_reg *([\(\),\.0-9])/\1 ╠?=$content_reg╣, \2/g")"
+        l="$(echo ${l}, | perl -ape "s/([,\(;\):0-9] *)$content_reg *([\(\),\.0-9])/\1 ╠?=$content_reg╣, \2/g")"
     done < <(echo "$l" | perl -ape "s/╠[^╣]*╣//g" | grep -o -F $tagfiles)
     l="$(echo "$l" | perl -ape "s/,[,\. ]*/, /g")"
 
@@ -71,7 +71,7 @@ function parse_journal_from_db() {
     echo "$i"
 }
 
-cardinal_regex="((first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth|thirteenth|fourteenth|fifteenth|sixteenth|seventeenth|eighteenth|nineteenth|twentieth|twenty|thirty|forty|fifty|[0-9]+ *[[:lower:]]{2} )[ \-]*)*"
+cardinal_regex="((first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth|thirteenth|fourteenth|fifteenth|sixteenth|seventeenth|eighteenth|nineteenth|twentieth|twenty|thirty|forty|fifty|[0-9]+ *[[:lower:]]{2} )[ \-]*)+"
 
 function parse_proceedings () {
     p="$(echo "$*" | perl -ape "s/╠.*?╣//g" | grep -i -E -o "(in[: ]+|[\.,\(\):] *)Proc(\.|eedings*) *((of|the) *)*($cardinal_regex)*(annual)* *" | head -n 1)"
@@ -152,6 +152,8 @@ cat |
     perl -ape "s/[,\.] *[Ss]ubmitted *[,\.]/, ╠submitted╣, /g" |
     sed "s/[,\.] *\(\w+ *edition\) *[,\.]/, ╠edition_info=\1╣, /Ig" |
     sed "s/[,\.] *\([0-9]*[[:lower:]]* ed\.\) *[\,\,]/, ╠edition_info=\1╣, /Ig" |
+
+    perl -ape "s/(in )*$cardinal_regex *(Annual)* *(International)* *Conf(erence|\.)* *(on )*/, ╠proceedings╣, /ig" |
 
     perl -ape "s/”/”, /g" |
     perl -ape "s/“/, “/g" |
