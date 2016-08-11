@@ -59,15 +59,10 @@ function replace () {
 function parse_journal_from_db() {
     i="$*"
 
-    if echo "$i" | grep -P "╠journal=" > /dev/null; then
-	echo "$i" && return 0
-    fi
-
     while read j; do # nonempty journal
 	jp="$(echo "$j" | perl -ne 'print quotemeta($_)')"
-    	i="$(echo "$i" | perl -ape "s/([[:lower:]][^ ]*\.|[,0-9:;]) *( [Ii]n)* +${jp} *([,\.0-9;:\(\)])/\1, ╠journal=${jp}╣, \3/g")"
+    	i="$(echo "$i" | perl -ape "s/([[:lower:]][^ ]*\. |[,0-9:;] |[\(\)]) *( [Ii]n )* *${jp} *([,\.0-9;:\(\)])/\1, ╠journal=${jp}╣, \3/g")"
     done < <(echo "$i" | perl -ape "s/╠.*?╣//g" | grep -F -o -f tags/journal)
-
     echo "$i"
 }
 
@@ -124,14 +119,15 @@ function guess_title () {
     echo "$*" | replace "$b" ", ╠title=$b╣, "
 }
 
+doi_regex="10\.[0-9]{4,}( *\. *[0-9]+)* *\/ *(j\. *)*[^ ,]+[^\. ]"
 
 cat |
     sed "s/$/, , , , ,/" |
     sed "s/[\`˚ˆˇ´´¨¨˝˜] *\([[:lower:]]\)/\1/g" | # Bad accents
     perl -ape "s| +// +|, |g" |
-    perl -ape "s/ doi *[:\. ]*(10[^ ]+[^\.,:; ])/, ╠doi=\1╣, /ig" |
-    perl -ape "s/(url[ [[:punct:]]]*)*[^ ]*[[:punct:]]doi[[:punct:]][^ ]*(10(([\.\/] *)+[^, ]+)+[^\.,:; ])/, ╠doi=\2╣, /ig" |
-    perl -ape "s/http[:\/ ]*dx[\. ]*doi[\. ]*org *\/ *([^ ]*[^ ,\.:;])/, ╠doi=\1╣, /g" |
+    perl -ape "s/ doi *[:\. ]*($doi_regex)/, ╠doi=\1╣, /ig" |
+    perl -ape "s/(url[ [[:punct:]]]*)*[^ ]*[[:punct:]]doi[[:punct:]][^ ]*($doi_regex)/, ╠doi=\2╣, /ig" |
+    perl -ape "s/http[:\/ ]*dx[\. ]*doi[\. ]*org *\/ *($doi_regex)/, ╠doi=\1╣, /g" |
     perl -ape "s/ MR[: ]*([0-9]{6})/, ╠MR=\1╣, /g" |
     perl -ape "s/([ ,(])(ISBN(-13|-10)*|ISSN)[ :\-#]+(([0-9]+[ -]*)*X?)/\1, ╠isbn_issn=\4╣, /ig" |
     perl -ape "s/ n[o\.]{0,2} *([0-9]+[-–]*[0-9]*)[ ,\.]/, ╠issue=\1╣, /g" | # 'no. 1-3', 'hard to approximate within n1−ε'
