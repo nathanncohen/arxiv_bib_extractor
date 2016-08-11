@@ -151,6 +151,8 @@ cat |
 
     perl -ape "s/(in )*$cardinal_regex *(Annual)* *(International)* *Conf(erence|\.)* *(on )*/, ╠proceedings╣, /ig" |
 
+    perl -ape "s/\(([ ,]*╠[^╣]*╣[, ]*)\)/, \1, /g" | # remove completely parsed parentheses. Useful in '(electronic). [journal name]'
+
     perl -ape "s/”/”, /g" |
     perl -ape "s/“/, “/g" |
     sed "s/,[ ,\.]*/, /g" |
