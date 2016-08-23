@@ -62,7 +62,6 @@ except NameError:
     group('title','pages')
     group('title','issue')
     group('title','vol')
-    group('title','pages')
     group('title','fullnames')
     group('pages','fullnames','vol')
     group('issue','pages','journal_init') # alias of journals names :-/

@@ -78,33 +78,6 @@ function parse_proceedings () {
     return 0
 }
 
-function guess_authors () {
-    b="$(echo "$*" | sed "s/^.*\] *//"g | sed "s/[”“╠[:digit:]].*//g")"
-
-    # Starts with Initials.
-    # Meant to match the following pattern: I. K. Whatever, K.L. Whateverrr[.,] and O. Thing and J. van der Stuff[.,]
-    if [ "${b:1:1}" = "." ]; then
-	aut="$(echo $b | \grep -P -o "^(((([[:upper:]]\.[- ]*)+,*)+ *([a-z]{1,4} )*)[^ ]+( and|[[:punct:]]) *)*")"
-	echo "$*" | replace "$aut" "╠authors=$aut╣, "
-	return 0
-    fi
-
-    # Same in the other order, i.e. Whatever I. K., Whateverrrrr K. L., #
-    aut="$(echo $b | \grep -P -o "^((\w{1,4} )*[^ ]+[[:punct:]]* +([[:upper:]][[:punct:]]+ *)+( and|[[:punct:]])* *)*(et al\.[ [[:punct:]]]*)*")"
-    if [ -n "$aut" ]; then
-	echo "$*" | replace "$aut" "╠authors=$aut╣, "
-	return 0
-    fi
-
-    # Victor P. Whatever, Nicolas E. G. H. H. Thingy, and Whatever Whathehell,
-    aut="$(echo "$b" | grep -P -o "^([[:upper:]][^ ,\.:;]+ ([[:upper:]]\. +)*[[:upper:]][^ ,\.:;]+([,\.:;]* and|[,\.:;]) +)+")"
-    if [ -n "$aut" ]; then
-	echo "$*" | replace "$aut" "╠authors=$aut╣, "
-	return 0
-    fi
-
-    echo "$*"
-}
 
 function longest_line () {
     while read a; do
@@ -163,12 +136,14 @@ cat |
     while read ll; do parse_proceedings "$ll"; done |
     while read ll; do parse_journal_from_db "$ll"; done |
 
-    while read ll; do guess_authors "$ll"; done |
+    ./guess_authors.pl |
     while read ll; do guess_title "$ll"; done |
 
     # The next may be useful for production, but it is hell for testing.
     # while read ll; do auto_annotate_from_db_greedy "$ll"; done |
     while read l; do auto_annotate_from_db "$l"; done |
+
+
 
     perl -ape "s/(╠journal=[^╣]*╣)[, ]*([0-9]+) *\(([0-9]+)\)[ ,\.]/\1, ╠vol=\2╣, ╠issue=\3╣, /g" | # '[journal], vol (issue)'
     perl -ape "s/(╠journal=[^╣]*╣)[, ]*([0-9]+)[ ,\.]/\1, ╠vol=\2╣, /g" | # The number that comes after the journal's name is the volume (?)
