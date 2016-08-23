@@ -83,6 +83,7 @@ function guess_title () {
 }
 
 doi_regex="10\.[0-9]{4,}( *\. *[0-9]+)* *\/ *(j\. *)*[^ ,]+[^\. ]"
+arxiv_regex="([0-9]{4}\.[0-9v]+|[^ ]+/[0-9\.]{4,}[0-9])"
 
 cat |
     sed "s/$/, , , , ,/" |
@@ -92,10 +93,11 @@ cat |
     perl -ape "s/(url[ [[:punct:]]]*)*[^ ]*[[:punct:]]doi[[:punct:]][^ ]*($doi_regex)/, ╠doi=\2╣, /ig" |
     perl -ape "s/http[:\/ ]*dx[\. ]*doi[\. ]*org *\/ *($doi_regex)/, ╠doi=\1╣, /g" |
     perl -ape "s/ MR[: ]*([0-9]{6})/, ╠MR=\1╣, /g" |
-    perl -ape "s/([ ,(])(ISBN(-13|-10)*|ISSN)[ :\-#]+(([0-9]+[ -]*)*X?)/\1, ╠isbn_issn=\4╣, /ig" |
-    perl -ape "s/ n[o\.]{0,2} *([0-9]+[-–]*[0-9]*)[ ,\.]/, ╠issue=\1╣, /g" | # 'no. 1-3', 'hard to approximate within n1−ε'
+    perl -ape "s/([ ,(])(ISBN(-13|-10)*|ISSN)([(): ]|online)*[ :\-#]+(([0-9]+[ -]*)+X?)/\1, ╠isbn_issn=\5╣, /ig" |
+    perl -ape "s/ [Nn][o\.]{0,2} *([0-9]+[-–]*[0-9]*)[ ,\.]/, ╠issue=\1╣, /g" | # 'no. 1-3', 'hard to approximate within n1−ε'
     perl -ape "s/ vol(umes*)*[\. ]*([0-9vi]+([-–]+[0-9]+)*)( of)*/,\. ╠vol=\2╣, /ig" | # 'volume 1–4'
-    perl -ape "s#arXiv[:/ ] *([0-9]{4}\.[0-9v]+|[^ ]+/[0-9\.]{4,}[0-9])#, ╠arxiv=\1╣, #ig" | # https://arxiv.org/help/arxiv_identifier
+    perl -ape "s#arXiv[:/ ] *$arxiv_regex#, ╠arxiv=\1╣, #ig" | # https://arxiv.org/help/arxiv_identifier
+    perl -ape "s#(current|version|available|at| *)*[htps:/ \.]*arxiv.org/(.{3}/)* *$arxiv_regex(\.pdf)*#, ╠arxiv=\3╣, #ig" |
     perl -ape "s/ (Pages|pages|p\.*p\.*|pp|p\.|p|pp\.)* *([0-9]+) *[-–]+ *([0-9]+)[,\.; ]/,\. ╠pages=\2–\3╣, /g" |
     perl -ape "s/ ([0-9]+)\(([0-9-]+)\):([0-9]+)[ –-]+([0-9]+)/, ╠vol=\1╣, ╠issue=\2╣, ╠pages=\3–\4╣, /" | # 52(12):1491–1552
     perl -ape "s/ ([0-9]+):([0-9]+)[–-]+([0-9]+)/, ╠vol=\1╣, ╠pages=\2–\3╣, /" |  # 3:131–150
@@ -112,7 +114,7 @@ cat |
     sed "s/[,\.] *\(\w+ *edition\) *[,\.]/, ╠edition_info=\1╣, /Ig" |
     sed "s/[,\.] *\([0-9]*[[:lower:]]* ed\.\) *[\,\,]/, ╠edition_info=\1╣, /Ig" |
 
-    perl -ape "s/(in )*$cardinal_regex *(Annual)* *(International)* *Conf(erence|\.)* *(on )*/, ╠proceedings╣, /ig" |
+    perl -ape "s/(in|the|proceedings|of| *)*$cardinal_regex *(Annual)* *(International)* *(Conf(erence|\.)*|workshop) *(on )*/, ╠proceedings╣, /ig" |
 
     perl -ape "s/\(([ ,]*╠[^╣]*╣[, ]*)\)/, \1, /g" | # remove completely parsed parentheses. Useful in '(electronic). [journal name]'
 
@@ -137,6 +139,7 @@ cat |
     ./find_keywords |
 
     perl -ape "s/(╠journal=[^╣]*╣)[, ]*([0-9]+) *\(([0-9]+)\)[ ,\.]/\1, ╠vol=\2╣, ╠issue=\3╣, /g" | # '[journal], vol (issue)'
+    perl -ape "s/(╠journal=[^╣]*╣)[, ]*\(([0-9]+)\) *([0-9]+)[ ,\.]/\1, ╠issue=\2╣, ╠vol=\3╣, /g" | # '[journal], vol (issue)'
     perl -ape "s/(╠journal=[^╣]*╣)[, ]*([0-9]+)[ ,\.]/\1, ╠vol=\2╣, /g" | # The number that comes after the journal's name is the volume (?)
     perl -ape "s/,[ \.,]*/, /g" |
     perl -ape "s/^\[[^ ]*\][ ,]*//g" |
