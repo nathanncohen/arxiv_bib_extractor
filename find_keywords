@@ -1,0 +1,11 @@
+#!/bin/bash
+
+cat tags/* > /tmp/.tags
+echo "}}}}}}}" >> /tmp/.tags
+
+in=$(mktemp)
+out=$(mktemp)
+cat | tee $in | sed 's/$/, }}}}}}}/g' | \grep -F -o -f /tmp/.tags | tr '\n' '\f' | perl -ape 's/(\f*}}}}}}}\f)/\n/g' > $out
+paste -d "\f" $in $out | sed 's/\f$//' | ./keywords_subs.py
+rm "$in" "$out"
+

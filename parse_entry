@@ -31,16 +31,6 @@ function auto_annotate_from_db() {
     fi
 }
 
-function auto_annotate_from_db_greedy() {
-    l="$*"
-    for t in tags/*; do
-	while read o; do
-	    l="$(echo "$l" | replace " $o" ", ╠$(basename "$t")=$o╣, ")"
-	done < <(echo "$l" | sed "s/╠[^╣]*╣, */, /g" | grep -o -w -F -f "$t")
-    done
-    echo "$l"
-}
-
 function get_tag () {
     while read a; do
 	echo "$a" | grep -o -P "╠$1=[^╣]*╣" | perl -ape "s/^.*=(.*)╣$/\1/g"
@@ -130,20 +120,21 @@ cat |
     perl -ape "s/“/, “/g" |
     sed "s/,[ ,\.]*/, /g" |
     perl -ape "s/╣, (in|of) /╣, /g" |
-    while read l; do auto_annotate_from_db "$l"; done |
-    # Must not reomve Proc. before the journal is parsed
-    while read ll; do parse_journal_from_db "$ll"; done |
-    while read ll; do parse_proceedings "$ll"; done |
-    while read ll; do parse_journal_from_db "$ll"; done |
 
+    # OLD VERSION
+    #
+    # while read l; do auto_annotate_from_db "$l"; done |
+    # # Must not reomve Proc. before the journal is parsed
+    # while read ll; do parse_journal_from_db "$ll"; done |
+    # while read ll; do parse_proceedings "$ll"; done |
+    # while read ll; do parse_journal_from_db "$ll"; done |
+
+    # ./guess_authors.pl |
+    # while read ll; do guess_title "$ll"; done |
+
+    # while read l; do auto_annotate_from_db "$l"; done |
     ./guess_authors.pl |
-    while read ll; do guess_title "$ll"; done |
-
-    # The next may be useful for production, but it is hell for testing.
-    # while read ll; do auto_annotate_from_db_greedy "$ll"; done |
-    while read l; do auto_annotate_from_db "$l"; done |
-
-
+    ./find_keywords |
 
     perl -ape "s/(╠journal=[^╣]*╣)[, ]*([0-9]+) *\(([0-9]+)\)[ ,\.]/\1, ╠vol=\2╣, ╠issue=\3╣, /g" | # '[journal], vol (issue)'
     perl -ape "s/(╠journal=[^╣]*╣)[, ]*([0-9]+)[ ,\.]/\1, ╠vol=\2╣, /g" | # The number that comes after the journal's name is the volume (?)
