@@ -1,6 +1,6 @@
 #!/bin/bash
 
-block_size=1
+block_size=1000
 function batchfind () {
     find "$*" -type f | tr '\n' ' ' | perl -ape "s/(([^ ]* ){0,$block_size})/\1\t/g" | tr '\t' '\n' | grep -E "."
 }
