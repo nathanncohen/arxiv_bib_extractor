@@ -4,14 +4,19 @@ foreach $line ( <STDIN> ) {
     chomp( $line );
     $saved_line = $line;
 
+    $line =~ s/^.{1,10}\]//;
     $line =~ s/^.*authors=[^╣]*╣[,\. ]*//;
     $line =~ s/╠[^y].*//g;
     $line =~ s/[, ]*╠.*?╣[, ]*/\n/g;
-    print $line."\n";
-    while ($x =~ /([“ ]*[[:digit:]|[:upper:]][^,\.”]*([,\. ]+[[:lower:]][^,\.]*)*)/) {
-        print "Word is $x, ends at position ", pos $x, "\n";
+    #print "--> $line\n";
+    while ($line =~ /[“ [:punct:]]*([[:digit:]|[:upper:]][^,\.]*([,\. ]+[[:lower:]][^,\.]*)*)/g) {
+        $title="$1";
+	$title =~ s/ *https*\:.*//g;
+	if ( length($title) >= 3 ) {
+	    $saved_line =~ s/\Q$title\E/, ╠title=$title╣, /;
+	    print "$saved_line\n";
+	    last;
+	}
     }
-    #perl -ape "s/^( |[[:punct]]|“)*//g" | grep -P "\w{3}" | longest_line)"
-    #echo "$*" | replace "$b" ", ╠title=$b╣, "
 
 }

@@ -35,10 +35,10 @@ try:
             # print((kw[i], ileft))
 
             right = bool(re.match(r"^ *[,\(\),\.0-9]",iright) or
-                         re.match(r"^[\. ]*$",iright))
+                         re.match(r"^[\.,;: ]*$",iright))
 
             left = bool(re.match(r".*[,\(;\):0-9] *$",ileft) or
-                        re.match(r"^[\. ]*$",ileft) or
+                        re.match(r"^[\.,;: ]*$",ileft) or
                         re.match(r".* [^A-Z][^ ]*\. *$",ileft))
 
             if left and right:
