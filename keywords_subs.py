@@ -45,7 +45,7 @@ try:
             left = right and bool(re.search(r"[,\(;\):0-9\?] *$",ileft) or
                                   re.search(r"^[\.,;: ]*$",ileft) or
                                   re.search(r" [^A-Z][^ ]*\. *$",ileft) or
-                                  (kw[i] in journals_set and re.search(r"\. *$",ileft)))
+                                  (kw[i] in journals_set and re.search(r"(?<![Pp]roc)\. *$",ileft)))
 
             if right and not left and kw[i] in journals_set:
                 m = re.search(proceedings_regex, l[:start].strip())
