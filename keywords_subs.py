@@ -13,6 +13,11 @@ for t in os.listdir("tags/"):
             raise Exception("{}: {}|{}".format(x,t,d[x]))
         d[x]=t
 
+journals_set = {x for x,v in d.items() if v=='journal'}
+
+cardinal_regex="(first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth|thirteenth|fourteenth|fifteenth|sixteenth|seventeenth|eighteenth|nineteenth|twentieth|twenty|thirty|forty|fifty|[0-9]+ *[a-z]{2}| |-)+"
+proceedings_regex=re.compile("([^A-Z][^ ]*\.|,)(?P<prefix> *(in|:|the|proc(\.|eedings)|of|"+cardinal_regex+"|Annual|International|Conf(erence|\.)*|workshop|on| )*)$", re.IGNORECASE)
+
 
 kw=re.compile(r"╠\?=([^╣]*)╣")
 try:
@@ -34,60 +39,25 @@ try:
             # print((kw[i], iright))
             # print((kw[i], ileft))
 
-            right = bool(re.match(r"^ *[,\(\),\.0-9]",iright) or
-                         re.match(r"^[\.,;: ]*$",iright))
+            right = (re.match(r" *[,\.0-9\(\)]",iright) or
+                     (re.match(r"[\.,;: ]*$",iright) and i+1 in kwok))
 
-            left = bool(re.match(r".*[,\(;\):0-9] *$",ileft) or
-                        re.match(r"^[\.,;: ]*$",ileft) or
-                        re.match(r".* [^A-Z][^ ]*\. *$",ileft))
+            left = right and bool(re.search(r"[,\(;\):0-9\?] *$",ileft) or
+                                  re.search(r"^[\.,;: ]*$",ileft) or
+                                  re.search(r" [^A-Z][^ ]*\. *$",ileft) or
+                                  (kw[i] in journals_set and re.search(r"\. *$",ileft)))
+
+            if right and not left and kw[i] in journals_set:
+                m = re.search(proceedings_regex, l[:start].strip())
+                if m:
+                    left = True
+                    start -= len(m.group('prefix'))
 
             if left and right:
                 kwok.add(i)
+                l = l[:start]+", ╠"+d[kw[i]]+"="+kw[i]+"╣, "+l[end:]
 
-        start = len(l)+1
-        for i in range(len(kw)-1,-1,-1):
-            start = l.rfind(kw[i],0,start-1)
-            if i not in kwok:
-                continue
-            l = l[:start]+", ╠"+d[kw[i]]+"="+kw[i]+"╣, "+l[start+len(kw[i]):]
-
-
-        # "s/([,\(;\):0-9] *)$content_reg *([\(\),\.0-9])"
-
-        #print ()
         print(l),
-        # failed = [w for i,w in enumerate(kw) if i not in kwok]
-        # if failed:
-        #     print("Missed",failed)
 
 except IOError:
     pass
-
-# use strict;
-# use utf8;
-
-# use open qw(:std :utf8);
-
-# binmode(STDOUT, ":utf8");
-
-# opendir(DIR, 'tags/') or die $!;
-# my %keywords;
-# while (my $file = readdir(DIR)) {
-#     # Use a regular expression to ignore files beginning with a period
-#     next if ($file =~ m/^\./);
-#     open(my $fh, '<:encoding(UTF-8)', 'tags/'.$file) or die "Could not open file '$file' $!";
-#     while (my $row = <$fh>) {
-# 	chomp $row;
-# 	$keywords{$row}=$file;
-#     }
-# }
-# closedir(DIR);
-# #print "$keywords{$_}: $_\n" for (keys %keywords);
-
-# foreach my $line ( <STDIN> ) {
-#     chomp( $line );
-#     my @arr = split(/\|/, $line);
-#     print "$arr[0]\n";
-#     print "$arr[1]\n";
-# }
-# #print "$keywords{Whatever}\n";

@@ -8,7 +8,7 @@
 # Considers that bib entries start when a *newline* starts with: [Sam45], 15. or [15]
 #
 # Returns them one per line, all starting with '['
-strings "$*" |
+strings --encoding=S "$*" |
     tr -d '\f\t' |
     perl -ape "s/^\ *([0-9]+)\./[\1]/g" |
     tr '\n' '\t' |

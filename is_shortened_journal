@@ -8,4 +8,4 @@ else
 fi
 a="$(echo "$a " | perl -ape "s/\b[[:lower:]]+\b/ /g" | perl -ape "s/([[:upper:]])/ \1/g" | perl -ape 's/[^[:alpha:]]+/ /g' | perl -ape "s/ +/[[:lower:]]*\\\.* *([^[:alpha:]]+| +[[:lower:]]+\\\b)* */g")"
 #echo "$a"
-grep -x -P "$a" tags/journal | sort -u
+grep -x -P "$a" tags/journal | sort -u | grep ""
